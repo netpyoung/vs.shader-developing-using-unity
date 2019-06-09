@@ -2,12 +2,29 @@
 - [white noise](https://www.ronja-tutorials.com/2018/09/02/white-noise.html)
 - [날아다니는 나비 만들기](https://holdimprovae.blogspot.com/2019/02/studyunityshader.html)
 - [Hbao Plus Analysis 0](https://hrmrzizon.github.io/2017/11/15/hbao-plus-analysis-0/)
+- [한정현 컴퓨터그래픽스 (11장- 오일러 변환 및 쿼터니언)](https://www.youtube.com/watch?v=XgE7tOSc7AU&list=PLYEC1V9tJOl03WLDoUEKbiYW_Xt4W6LTl&index=12)
+- [한정현 컴퓨터그래픽스 (15장 - 쉐도우 맵)](https://www.youtube.com/watch?v=kCuEtQh91U8&list=PLYEC1V9tJOl03WLDoUEKbiYW_Xt4W6LTl&index=16)
 
 - https://docs.unity3d.com/Manual/SL-DataTypesAndPrecision.html
 - https://docs.unity3d.com/Manual/SL-ShaderPerformance.html
 
+# mipmap
+- [유니티에서의 텍스쳐 밉맵과 필터링 (Texture Mipmap & filtering in Unity)](https://ozlael.tistory.com/45)
+    - 텍스쳐에서 밉맵이란 텍스쳐에게 있어서 LOD같은 개념입니다
+
+- [tex2Dlod와 tex2Dbias의 비교연구](https://chulin28ho.tistory.com/258)
+
+# TODO texture
+## ETC2
+- OpenGL 3.0 이상.
+## ASTC(Adaptive Scalable Texture Compression)
+- 손실압축
+- OpenGL 3.2 이상 혹은 OpenGL ES 3.1 + AEP(Android Extension Pack)
+- iOS는 A8 processor를 사용하기 시작하는 기종부터 사용이 가능합니다. iPhone 6, iPad mini 4가 이에 해당합니다.
+- 출처: https://ozlael.tistory.com/84?category=612211 [오즈라엘]
+
 # 00.
-- [Shader Development using Unity: Full Course](https://www.youtube.com/watch?v=FQ_5VQCc5XI&list=PL09X4HXJpa8kfw8cZjyYZel8WlOT5B1_k)
+- https://shaderdev.com/
 - Chayan Vinayak Goswami
 - TA 8 years
 
@@ -346,6 +363,7 @@ sin / abs
 
 
 # 21. Rendering Pipeline - part 1
+# 22. Rendering Pipeline - part 2
 - **TODO 이거 다시 쌈박하게 정리해야함.**
 ~~~
 RenderState
@@ -363,12 +381,6 @@ Saved by batching - A다음에 오는 B, C를 그릴 동안 RenderState변화가
 Batches : 1     Saved by batching : 2
 DrawCall - 3
 ~~~
-
-
-
-# 22. Rendering Pipeline - part 2
-#pass
-
 
 
 # 23. Normal Maps _ Types
@@ -501,11 +513,23 @@ v.normal
 v.tangent
 binormal = cross(normal, tangent)
 --------------------------------
-world-space normal = object-space normal * model matrix(_Object2World)
-world-space tangent = object-space tangent * model matrix(_Object2World)
+world-space normal = object-space normal * unity_WorldToObject
+world-space tangent = object-space tangent * unity_ObjectToWorld
 world-space binormal = cross(world-space normal, world-space tangent)
 ~~~
 
+* 둘다 ObjectToWorld는 ? scale (1, 1, 1) =>  (2, 2, 2) 처럼 균등이면 문제가 없다. 하지만, 메쉬가 기울어져있으면,
+    - https://forum.unity.com/threads/world-space-normal.58810/
+    - https://stackoverflow.com/questions/13654401/why-transforming-normals-with-the-transpose-of-the-inverse-of-the-modelview-matr
+    - normal은 표면에 수직이기에, 기울어져 shifting이 발생(틀린 라이트닝 발생.)
+    - tangent는 표면가 밀착되었기에, 문제없음.
+    - Even with the inverse-transpose transformation, normal vectors may lose their unit length; thus, they may need to be renormalized after the transformation.
+
+![figure10.8](./res/figure10.8.jpg)
+
+    world-space normal = object-space normal * unity_ObjectToWorld
+    world-space tangent = object-space tangent * unity_ObjectToWorld
+    world-space binormal = cross(world-space normal, world-space tangent)
 
 - 유니티의 rgb 입력 범위는 [0 ~ 1]
 - 유니티의 노멀의 범위는 [-1 ~ 1]
@@ -514,3 +538,153 @@ world-space binormal = cross(world-space normal, world-space tangent)
 
 
 ## 27. DXT-Compression
+- 손실압축.
+- https://en.wikipedia.org/wiki/S3_Texture_Compression
+- https://www.fsdeveloper.com/wiki/index.php?title=DXT_compression_explained
+- 4x4 픽셀 중에, 색 2개를 고름. 2개의 색을 interpolation시켜서 4x4 color 인덱스를 만듬.
+
+ - 노멀맵 같은 경우에는 red채널의 변화가 심하기 때문에, R채널을 A채널로 바꾸고 DXT5로 저장한 후 shader에서 AGB로 접근하여 샘플링하면 상당히 괜찮은 결과를 얻어낼 수 있습니다.
+    - https://gpgstudy.com/forum/viewtopic.php?t=24598
+
+
+- DXT1 포맷을 이용.
+
+| V | color | channel | bit |
+|---|-------|---------|-----|
+| X | R     | color0  | 16  |
+| Y | G     | color1  | 16  |
+| Z | B     | x       | 0   |
+
+- DXT5nm 포맷을 이용(퀄리티 업.)
+
+| V | color | channel       | bit |
+|---|-------|---------------|-----|
+| X | R     | a0, a1        | 16  |
+|   |       | alpha indices | 48  |
+| Y | G     | color0,1      | 32  |
+|   |       | color indices | 32  |
+| Z | B     | x             | 0   |
+
+- xyzw, wy => _g_r => rg => xyn // r이 뒤로 있으므로, 한바퀴 돌려줘야함.
+- `normal.xy = packednormal.wy * 2 - 1;` (0 ~ 1 => -1 ~ 1)
+- `Z`는 쉐이더에서 계산. 단위 벡터의 크기는 1인것을 이용.(sqrt(x^2 + y^2 + z^2) = 1)
+
+
+
+## DXT1, (RGB 5:6:5), (RGBA 5:5:5:1)
+|               |                |
+|---------------|----------------|
+| color0        | 16             |
+| color1        | 16             |
+| color indices | 4 * 4 * 2 = 32 |
+
+    (RGB)24 * 16 = 384
+    384 / 64 = 6
+    6배를 아낄 수 있다.
+
+## DXT3
+
+|               |                |
+|---------------|----------------|
+| alpha         | 64             |
+| color0        | 16             |
+| color1        | 16             |
+| color indices | 4 * 4 * 2 = 32 |
+
+
+    (RGBA)32 * 16 = 512
+    512 / 128 = 4
+    4배를 아낄 수 있다.
+
+## DXT5
+
+|               |                |
+|---------------|----------------|
+| a0            | 8              |
+| a1            | 8              |
+| alpha indices | 48             |
+| color0        | 16             |
+| color1        | 16             |
+| color indices | 4 * 4 * 2 = 32 |
+
+    R4G4B4A4
+    R4G4B4A4 (출력시 보간 A8)
+
+- DXT5nm : https://github.com/castano/nvidia-texture-tools/wiki/NormalMapCompression
+- normalmap compression : https://mgun.tistory.com/1892
+- Texture types : http://wiki.polycount.com/wiki/Texture_types
+- https://www.nvidia.com/object/real-time-normal-map-dxt-compression.html
+- bc5 : https://docs.microsoft.com/en-us/windows/desktop/direct3d10/d3d10-graphics-programming-guide-resources-block-compression#bc5
+
+
+
+## (Tangent-space) normal map to (World-space) normal
+
+### tangent to dxt
+
+    (Object-space) tangent * model matrix(_Object2World) = (World-space) tangent
+    t.x =R=> 0 ~ 1 = `(r * 2) - 1` => -1 ~ 1
+    t.y =G=>
+    t.z =B=>
+
+    R => dxt.alpha
+    G => dxt.color0, 1
+
+
+# 28. Normal Map Shader - part 1
+# 29. Normal Map Shader - part 2
+
+    o.normalWorld = normalize(mul(v.normal, unity_WorldToObject));
+    o.tangentWorld = normalize(mul(v.tangent, unity_ObjectToWorld));
+    o.binormalWorld = normalize(cross(o.normalWorld, o.tangentWorld) * v.tangent.w);
+
+
+    uniform sampler2D _MainTex;
+    uniform float4 _MainTex_ST;
+
+
+* `UV`, `ST` 도대체 뭐야.
+    - 3d 좌표계에서 xyzw 취함. uv남음. st남음.
+    - uv - 텍스처 좌표계
+    - st - 텍셀(texel = Texture + pixel) 좌표계
+
+
+~~~
+UV - texture's coordinate
+       +----+ (1, 1)
+       |    |
+(0, 0) +----+
+
+ST - surface's coordinate space.
+       +----+ (32, 32)
+       |    |
+(0, 0) +----+
+
+    o.texcoord.xy = (v.texcoord.xy * _MainTex_ST.xy + _MainTex_ST.zw)
+
+|    |        |
+|----|--------|
+| xy | tiling |
+| zw | offset |
+~~~
+
+* 나중에 확인해볼껏 (http://egloos.zum.com/chulin28ho/v/5339578)
+
+    일반적인 노멀맵은 (탄젠트, 바이노멀, 노멀) 순서로 저장 되어 있습니다.
+    하지만, DirectX의 경우 표준좌표계는 (탄젠트, 노멀, 바이노멀) 순입니다.
+
+
+* [노말맵은 왜 파란가?](https://www.youtube.com/watch?v=Y3rn-4Nup-E)
+    - y는 뒤집어 저장하여 아티스트가 보기 편하도록 저장하는게 작업 효율이 좋다더라.
+
+# 30. Outline Shader - intro
+# 31. Outline Shader - code
+# 32. Author_s Check-in
+# 33. Multi Variant Shader and Cginc files
+# 34. Multi Variant Shader - part 1
+# 35. Multi Variant Shader - part 2
+# 36. Basic Lighting Model and Rendering Path - part 1
+# 36. Basic Lighting Model and Rendering Path - part 2
+# 38. Diffuse Reflection - intro
+# 39. Diffuse Reflection - code 1
+# 39. Diffuse Reflection - code 2
