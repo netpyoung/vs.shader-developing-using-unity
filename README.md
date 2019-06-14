@@ -4,6 +4,7 @@
 - [Hbao Plus Analysis 0](https://hrmrzizon.github.io/2017/11/15/hbao-plus-analysis-0/)
 - [한정현 컴퓨터그래픽스 (11장- 오일러 변환 및 쿼터니언)](https://www.youtube.com/watch?v=XgE7tOSc7AU&list=PLYEC1V9tJOl03WLDoUEKbiYW_Xt4W6LTl&index=12)
 - [한정현 컴퓨터그래픽스 (15장 - 쉐도우 맵)](https://www.youtube.com/watch?v=kCuEtQh91U8&list=PLYEC1V9tJOl03WLDoUEKbiYW_Xt4W6LTl&index=16)
+- [Gooch shading](https://en.wikipedia.org/wiki/Gooch_shading)
 
 - https://docs.unity3d.com/Manual/SL-DataTypesAndPrecision.html
 - https://docs.unity3d.com/Manual/SL-ShaderPerformance.html
@@ -677,8 +678,80 @@ ST - surface's coordinate space.
 * [노말맵은 왜 파란가?](https://www.youtube.com/watch?v=Y3rn-4Nup-E)
     - y는 뒤집어 저장하여 아티스트가 보기 편하도록 저장하는게 작업 효율이 좋다더라.
 
+
+- [Adding depth to 2D with hand-drawn normal maps in The Siege and the Sandfox
+](https://www.gamasutra.com/view/news/312977/Adding_depth_to_2D_with_handdrawn_normal_maps_in_The_Siege_and_the_Sandfox.php)
+
 # 30. Outline Shader - intro
 # 31. Outline Shader - code
+- 기준 모델 스케일 업. 단일 생상으로 칠하기
+- 그 위에 덧 그리기
+
+~~~
+단위 행렬.
+| 1 0 0 0 |
+| 0 1 0 0 |
+| 0 0 1 0 |
+| 0 0 0 1 |
+
+이동(translate) 행렬
+| 1 0 0 x |
+| 0 1 0 y |
+| 0 0 1 z |
+| 0 0 0 1 |
+
+스케일(scale) 행렬
+| x 0 0 0 |
+| 0 y 0 0 |
+| 0 0 z 0 |
+| 0 0 0 1 |
+
+2차원 회전
+| x' | = | cos$ -sin$||x|
+| y' |   | sin$  cos$||y|
+
+3차원 회전
+- 회전행렬 기준으로 생각한다.
+- 2차원 회전 행렬을 기억한다.
+- 기준 행 아래가 `-sin$`이다.
+| 1(x)  0    0     0    | (x 아레 -sin$)
+| 0     cos$ -sin$ 0    |
+| 0     sin$  cos$ 0    |
+| 0     0    0     1    |
+
+| cos$  0    sin$  0    |
+| 0     1(y) 0     0    | (y 아레 -sin$)
+| -sin$ 0    cos$  0    |
+| 0     0    0     1    |
+
+
+| cos$  -sin$ 0    0    |
+| sin$   cos$ 0    0    |
+| 0     0     1(z) 0    | (z의 아래 마지막 열은 비워야하니 맨 위가 -sin$)
+| 0     0     0    1    |
+~~~
+
+
+    Blend SrcAlpha OneMinusSrcAlpha
+
+- https://docs.unity3d.com/kr/current/Manual/SL-Blend.html
+
+![unity_blend.png](./res/unity_blend.png)
+
+
+    Zwrite off << 이거 어렵네..
+
+- https://www.slideshare.net/pjcozzi/z-buffer-optimizations
+
+
+    Cull Front
+
+
+- normal 사출. (단점, 면들 사이의 갭들이 보임.)
+- 매트릭스 확대.
+
+- [gpg:쉐이더 없이 카툰 외곽라인 처리시 질문입니다](https://gpgstudy.com/forum/viewtopic.php?p=94423#94423)
+
 # 32. Author_s Check-in
 # 33. Multi Variant Shader and Cginc files
 # 34. Multi Variant Shader - part 1
