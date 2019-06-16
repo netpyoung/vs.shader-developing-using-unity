@@ -526,7 +526,7 @@ world-space binormal = cross(world-space normal, world-space tangent)
     - tangent는 표면가 밀착되었기에, 문제없음.
     - Even with the inverse-transpose transformation, normal vectors may lose their unit length; thus, they may need to be renormalized after the transformation.
 
-![figure10.8](./res/figure10.8.jpg)
+![figure10.8](./res/figure10_8.jpg)
 
     world-space normal = object-space normal * unity_ObjectToWorld
     world-space tangent = object-space tangent * unity_ObjectToWorld
@@ -741,8 +741,23 @@ ST - surface's coordinate space.
 
     Zwrite off << 이거 어렵네..
 
-- https://www.slideshare.net/pjcozzi/z-buffer-optimizations
+- TODO https://www.slideshare.net/pjcozzi/z-buffer-optimizations
+- TODO https://blog.csdn.net/puppet_master/article/details/53900568
+- [5강 알파와알파소팅](https://www.slideshare.net/jpcorp/5-10351002)
+~~~
+    C  Geometry + 3
+  B    Geometry + 2
+A      Geometry + 1
+과 같이 rendering queue의 순서를 역순으로 해도, A가 가장 앞에 오게된다(Z영향.)
 
+Z-buffer 영향(ZTest - depth test, ZWrite - deep write)
+오브젝트의 깊이값과 현재 캐쉬된 픽셀의 깊이값을 비교해서 패스하면, color버퍼에 쓴다.
+ex) ZTest Less - 깊이가 캐쉬보다 작으면 pass
+ZTest Always(Off) - 항상 pass
+
+ZWrite On  - open deep write
+ZWrite Off - close deep write
+~~~
 
     Cull Front
 
@@ -752,12 +767,63 @@ ST - surface's coordinate space.
 
 - [gpg:쉐이더 없이 카툰 외곽라인 처리시 질문입니다](https://gpgstudy.com/forum/viewtopic.php?p=94423#94423)
 
+- [GPG 2 글 5.1] 외곽선 렌더링 방법에 대해 - https://gpgstudy.com/forum/viewtopic.php?t=18157
+
+~~~
+글쓴이: 그레이오거 » 2007-12-12 10:54
+
+외곽선 처리 방식을 크게 나누면,
+
+1. 버텍스와 노멀을 가지고 노는거(VS)
+2. 일단 렌더링 건다음 이미지 프로세싱으로 외곽선을 따주는거(PS)
+3. 따로 선만 그려주는거
+
+거의 요 세가지에 속하더군요.
+
+1번의 경우 비교적 계산비용이 작습니다. 라이트벡터와의 내적을 이용한 방식은 속도 지존입니다만 로우폴리곤이나 디자이너가 와이어프레임 감각이 없는 경우 안하느니만 못한 퀄리티가 나오기 때문에 사용이 좀 한정적입니다. 외곽선에 폴리곤으로 라인을 생성해 주는 방식도 있습니다. 가장 흔한게 노말 뒤집어 확대해 찍어주는거죠. GPU의 적 2Pass이긴 하지만 개인적으로는 가격대 퀄리티면에서 가장 좋다고 봅니다. 걍 선 자체도 폴리곤이다 보니 거리에 따라 자동으로 외곽선 두께가 비례에 맞게 조절됩니다. 특히 이건 만약 프로그래머가 쉐이더를 몰라도 맥스에서 만들어 줄 수도 있습니다. 다만 위엣분들이 말슴하셨듯, 중복 노멀을 가지고 있을 경우 별도처리를 해야 하는 귀찮음이 있습니다.
+
+2번의 경우 외곽선 두께가 균일하고 퀄리티 면에서도 가장 좋습니다. 깊이감이 있는 외곽선 묘사도 가능하고요(얼굴 외곽라인을 묘사할때 턱선은 서서히 옅어지게도 할 수 있습니다. gooch shading과 함께 쓰니 캐릭터 얼굴 진짜 이쁘게 나오더라고요! >o<b), 깊이, 컬러, 노말값 등등 중에서 어느걸 기준으로 하느냐에 따라 달라지지만 기본적으로 이미지 프로세싱을 쓰다보니 다채로운 효과가 가능합니다. 노멀문제, 알파문제, 스키닝도 자동해결됩니다. 안티알리어싱도 디폴트로 처리됩니다. 다만 PS에 다중샘플링이 필수인데다, 각각의 방식이 독자적으로는 완전하지 못해 보완적으로 섞어주어야 하기 때문에 퍼포먼스 좀(...사실은 많이) 먹습니다. 그래서 저는 결국 빼버리고 노말뒤집기로 갔습니다(지못미... ㅠ_ㅠ);;
+
+3. 보통 면단위로 노멀을 계산해 경계선으로 판단되는 경우 라인이나 폴리곤 띠를 따로 생성해 그려주는 방식입니다. 1번 방식과 흡사하지만 선 두께가 오브젝트의 크기나 거리에 상관 없이 균일하게 유지됩니다. 아마도 제시하신 스샷에서는 이 방식으로 추측됩니다.
+
+높은 퀄리티보다는 다수의 오브젝트 처리가 중요한 경우 1번을, 소수지만 퀄리티가 중요할 경우 2번을, 적절한 부하와 균일한 선 두께을 원할 경우 3번을 택하는 것 같더군요.
+
+갠적으론 gooch + depth 기반 PS선따기 원츄! ㅡ_ㅡb
+~~~
+
 # 32. Author_s Check-in
+pass
+
 # 33. Multi Variant Shader and Cginc files
+_변수명("레이블", 타입) = 디폴트값
+
+~~~
+    [KeywordEnum(On, Off)] _UseNormalMap("Use Normal Map", float) = 0
+    #pragma shader_feature _USENORMAL_OFF _USENORMAL_ON
+    #if _USENORMAL_ON
+    #else
+    #endif
+~~~
+
+- 여러 multi\_compile 줄 결합
+    - 여러 multi_compile 줄이 제공될 수 있고, 결과 셰이더가 가능한 모든 줄 조합에 대해 컴파일됩니다.
+~~~
+    #pragma multi_compile A B C
+    #pragma multi_compile D E
+~~~
+   - 첫 번째 줄에서 세 가지 배리언트가 생성되고, 두 번째 줄에서 두 가지 배리언트가 생성되어 총 여섯 가지의 셰이더 배리언트(A+D, B+D, C+D, A+E, B+E, C+E)가 생성됩니다
+
+- Difference between shader_feature and multi_compile
+~~~
+    shader_feature is very similar to multi_compile. The only difference is that Unity does not include unused variants of shader_feature shaders in the final build. For this reason, you should use shader_feature for keywords that are set from the Materials, while multi_compile is better for keywords that are set from code globally.
+~~~
+
 # 34. Multi Variant Shader - part 1
 # 35. Multi Variant Shader - part 2
+
 # 36. Basic Lighting Model and Rendering Path - part 1
 # 36. Basic Lighting Model and Rendering Path - part 2
+
 # 38. Diffuse Reflection - intro
 # 39. Diffuse Reflection - code 1
 # 39. Diffuse Reflection - code 2
