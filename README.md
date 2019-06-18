@@ -795,6 +795,8 @@ ZWrite Off - close deep write
 pass
 
 # 33. Multi Variant Shader and Cginc files
+# 34. Multi Variant Shader - part 1
+# 35. Multi Variant Shader - part 2
 _변수명("레이블", 타입) = 디폴트값
 
 ~~~
@@ -818,11 +820,78 @@ _변수명("레이블", 타입) = 디폴트값
     shader_feature is very similar to multi_compile. The only difference is that Unity does not include unused variants of shader_feature shaders in the final build. For this reason, you should use shader_feature for keywords that are set from the Materials, while multi_compile is better for keywords that are set from code globally.
 ~~~
 
-# 34. Multi Variant Shader - part 1
-# 35. Multi Variant Shader - part 2
 
 # 36. Basic Lighting Model and Rendering Path - part 1
 # 36. Basic Lighting Model and Rendering Path - part 2
+## BEADS
+- Basic Lighting Model
+
+|          |          |                                    |
+|----------|----------|------------------------------------|
+| Emisive  | 발산     | 발광체                             |
+| Ambient  | 주변광   | 전체적                             |
+| Diffuse  | 난반사광 | 특정방향, 고르게 반사              |
+| Specular | 전반사광 | 특정방향, 특정방향으로 정확히 반사 |
+
+|          |                       |                 |
+|----------|-----------------------|-----------------|
+| vertex   | per vertex lighting   | vertex shader   |
+| fragment | per fragment lighting | fragment shader |
+
+- Unity support 4 Rendering Path
+
+|                                  |                 |
+|----------------------------------|-----------------|
+| Forward Rendering                | Base Pass       |
+|                                  | Additional Pass |
+| Legacy Defered(Defered Lighting) |                 |
+| Defered shading                  |                 |
+| Legacy Vertex Lit                |                 |
+
+
+## Fowrad Rendering
+- 5 object x 4 lighting = 20 draw call
+- 최적화 해서 라이트가 영향을 주는 오브젝트만 그림
+- 어쨋든, 라이트가 늘어날 수록, 드로우 콜 수가 배로 늘어남.
+- 모바일같은 척박한 환경에서는
+    - 라이트를 하나만 유지
+    - 라이트를 미리 텍스쳐에 구음.
+### Base Pass
+~~~
+Tag { Queue = Transparency ...}
+Pass {
+    LightMode = "Forward Base"
+}
+~~~
+
+- 1 per pixel `directional` light rendering
+    - Spherical harmonic lights(Light probes, Global Illumination, Sky Ambient)
+
+### Additional Pass
+~~~
+Pass {
+    LightMode = "Forward Add"
+}
+~~~
+
+- 1 per pixel additional light
+
+~~~
+ex) directional 라이트랑 point 라이트가 있으면,
+directional light에는 forward base로 point light에는 foward add로 두가지 패스를 작성해야 한다.
+~~~
+
+## Legacy Defered Lighting:
+1. 씬을 `Geometry Buffer`에 렌더링한다.(보여지는 각 픽셀의 depth, normal, specular power)
+2. Light Accumulation
+    - 각 라이트에 영향을 받는 픽셀을 찾음.
+    - 지오메트리 버퍼에서 데이터를 읽음
+    - 라이트 값을 계산
+    - `Light Accumulation buffer`에 저장.
+3. 씬을 다시 렌더링 한다.
+    - Accumulated light value + Mesh color + Ambient or Emissive light
+
+
 
 # 38. Diffuse Reflection - intro
 # 39. Diffuse Reflection - code 1
