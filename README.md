@@ -823,15 +823,16 @@ _변수명("레이블", 타입) = 디폴트값
 
 # 36. Basic Lighting Model and Rendering Path - part 1
 # 36. Basic Lighting Model and Rendering Path - part 2
-## BEADS
-- Basic Lighting Model
 
-|          |          |                                    |
-|----------|----------|------------------------------------|
-| Emisive  | 발산     | 발광체                             |
-| Ambient  | 주변광   | 전체적                             |
-| Diffuse  | 난반사광 | 특정방향, 고르게 반사              |
-| Specular | 전반사광 | 특정방향, 특정방향으로 정확히 반사 |
+## BEADS(구슬 목걸이)
+- `B`asic Lighting Model
+
+|            |          |                                    |
+|------------|----------|------------------------------------|
+| `E`misive  | 발산     | 발광체                             |
+| `A`mbient  | 주변광   | 전체적                             |
+| `D`iffuse  | 난반사광 | 특정방향, 고르게 반사              |
+| `S`pecular | 전반사광 | 특정방향, 특정방향으로 정확히 반사 |
 
 |          |                       |                 |
 |----------|-----------------------|-----------------|
@@ -840,16 +841,17 @@ _변수명("레이블", 타입) = 디폴트값
 
 - Unity support 4 Rendering Path
 
-|                                  |                 |
-|----------------------------------|-----------------|
-| Forward Rendering                | Base Pass       |
-|                                  | Additional Pass |
-| Legacy Defered(Defered Lighting) |                 |
-| Defered shading                  |                 |
-| Legacy Vertex Lit                |                 |
+|                                    |                 |
+|------------------------------------|-----------------|
+| Forward Rendering                  | Base Pass       |
+|                                    | Additional Pass |
+| Legacy Deferred(Deferred Lighting) |                 |
+| Deferred shading                   |                 |
+| Legacy Vertex Lit                  |                 |
 
 
 ## Fowrad Rendering
+- https://docs.unity3d.com/Manual/RenderTech-ForwardRendering.html
 - 5 object x 4 lighting = 20 draw call
 - 최적화 해서 라이트가 영향을 주는 오브젝트만 그림
 - 어쨋든, 라이트가 늘어날 수록, 드로우 콜 수가 배로 늘어남.
@@ -878,10 +880,12 @@ Pass {
 
 ~~~
 ex) directional 라이트랑 point 라이트가 있으면,
-directional light에는 forward base로 point light에는 foward add로 두가지 패스를 작성해야 한다.
+directional light에는 forward base로 point light에는 forward add로 두가지 패스를 작성해야 한다.
 ~~~
 
-## Legacy Defered Lighting:
+## Legacy Deferred Lighting
+- https://docs.unity3d.com/Manual/RenderTech-DeferredLighting.html
+
 1. 씬을 `Geometry Buffer`에 렌더링한다.(보여지는 각 픽셀의 depth, normal, specular power)
 2. Light Accumulation
     - 각 라이트에 영향을 받는 픽셀을 찾음.
@@ -892,7 +896,37 @@ directional light에는 forward base로 point light에는 foward add로 두가�
     - Accumulated light value + Mesh color + Ambient or Emissive light
 
 
+## Deferred Shading
+- https://docs.unity3d.com/Manual/RenderTech-DeferredShading.html
+
+1. 씬을 `Geometry Buffer(g-buffer)`에 렌더링한다.
+    - depth
+    - diffuse color
+    - normal(world space)
+    - specular color
+    - smoothness
+    - emission
+2. Light Accumulation
+    - 각 라이트에 영향을 받는 픽셀을 찾음.
+    - 지오메트리 버퍼에서 데이터를 읽음
+    - 라이트 값을 계산
+    - `Light Accumulation buffer`에 저장.
+    - accumulated-light value와 diffuse color + spec + emission를 합친다.
+
+- deferred shading vs deferred lighting
+    - deferred shading에서는 씬을 다시 렌더링 하지 않아도 된다.(이미 지오메트리 버퍼에 저장했기때문에)
+- Unity requirement for deferred shading
+    - Graphic Card with multiple render target
+    - Support Shader Model 3 or later
+    - Support for Depth-Render Texture
 
 # 38. Diffuse Reflection - intro
 # 39. Diffuse Reflection - code 1
-# 39. Diffuse Reflection - code 2
+# 40. Diffuse Reflection - code 2
+# 41. Diffuse Reflection - code 3
+- lambert cosine law
+    - light in reflected off a surface based on cosine-fall off.
+
+- Fowrad Rendering기반으로
+    - 씬에 하나 이상의 라이트가 있다면, 하나의 가장 밝은 directional light가 Base Pass에 사용.
+    - 다른 라이트들은 Spherical Harmonics로 간주.
