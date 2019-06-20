@@ -930,3 +930,19 @@ directional light에는 forward base로 point light에는 forward add로 두가�
 - Fowrad Rendering기반으로
     - 씬에 하나 이상의 라이트가 있다면, 하나의 가장 밝은 directional light가 Base Pass에 사용.
     - 다른 라이트들은 Spherical Harmonics로 간주.
+
+~~~
+mul(v.tangent, unity_ObjectToWorld) = float4
+| 1 2 3 4 | | 1 |   | 30 |
+| 4 3 2 1 | | 2 | = | 20 |
+| 1 2 3 4 | | 3 |   | 30 |
+| 4 3 2 1 | | 4 |   | 20 |
+
+mul(unity_ObjectToWorld, v.tangent) = float4
+            | 1 2 3 4 |
+| 1 2 3 4 | | 4 3 2 1 | = | 28 26 24 22 |
+            | 1 2 3 4 |
+            | 4 3 2 1 |
+
+동일한 float4이라도 순서에 따라 값이 다르다.
+~~~
