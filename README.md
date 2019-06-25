@@ -932,17 +932,40 @@ directional light에는 forward base로 point light에는 forward add로 두가�
     - 다른 라이트들은 Spherical Harmonics로 간주.
 
 ~~~
-mul(v.tangent, unity_ObjectToWorld) = float4
+mul(unity_ObjectToWorld, v.tangent) = float4
 | 1 2 3 4 | | 1 |   | 30 |
 | 4 3 2 1 | | 2 | = | 20 |
 | 1 2 3 4 | | 3 |   | 30 |
 | 4 3 2 1 | | 4 |   | 20 |
 
-mul(unity_ObjectToWorld, v.tangent) = float4
+mul(v.tangent, unity_ObjectToWorld) = float4
+
             | 1 2 3 4 |
 | 1 2 3 4 | | 4 3 2 1 | = | 28 26 24 22 |
             | 1 2 3 4 |
             | 4 3 2 1 |
 
 동일한 float4이라도 순서에 따라 값이 다르다.
+
+v.tangent.ObjectToWorld 처럼 메소드 방식으로 생각하지 말고,
+ObjectToWorld(v.tangent)처럼 함수형 방식으로 생각하면 순서 햇갈리지 않을듯.
+~~~
+
+
+# 42. Specular Reflection - intro
+# 43. Specular Reflection - code 1
+# 44. Specular Reflection - code 2
+
+~~~
+N: Normal
+L: Light
+R: Reflect
+
+L  N  R
+ \ | /
+  \|/
+---+---
+    \
+     \
+     -L
 ~~~
