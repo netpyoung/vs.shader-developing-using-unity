@@ -960,6 +960,8 @@ ObjectToWorld(v.tangent)처럼 함수형 방식으로 생각하면 순서 햇갈
 N: Normal
 L: Light
 R: Reflect
+V: Viewport
+H: halfway vector - normalize(L + V)
 
 L  N  R
  \ | /
@@ -968,4 +970,11 @@ L  N  R
     \
      \
      -L
+
+Phong Reflection Model : max(0, (R.V))^S
+Blinn-Phong Reflection Model : max(0, (N.H))^S
 ~~~
+
+- 입사광의 각도/방향
+- Normal
+- 뷰포트/눈의 각도/방향
