@@ -978,3 +978,50 @@ Blinn-Phong Reflection Model : max(0, (N.H))^S
 - 입사광의 각도/방향
 - Normal
 - 뷰포트/눈의 각도/방향
+
+* tex2D, tex2Dlod
+    - https://docs.microsoft.com/en-us/windows/desktop/direct3dhlsl/dx-graphics-hlsl-tex2d
+    - https://docs.microsoft.com/en-us/windows/desktop/direct3dhlsl/dx-graphics-hlsl-tex2dlod
+    - https://docs.unity3d.com/Manual/SL-PlatformDifferences.html
+    - https://docs.unity3d.com/Manual/SL-ShaderCompileTargets.html
+``` cg
+// tex2D - pixel shader only
+// float4 specularMap = tex2D(_SpecularMap, o.texcoord.xy);
+
+// tex2Dlod - 2D texture lookup with specified level of detail and optional texel offset.
+// samp : Sampler to lookup.
+// s.xy : Coordinates to perform the lookup.
+// s.w : Level of detail.
+
+#pragma target 3.0
+float4 specularMap = tex2Dlod(_SpecularMap, o.texcoord);
+```
+
+* pragma
+    - https://docs.unity3d.com/Manual/SL-ShaderCompileTargets.html
+    - `#pragma target 2.5 (default)`
+`
+# 45. Ambient Reflection - intro
+
+|                          |        |                                                                               |
+|--------------------------|--------|-------------------------------------------------------------------------------|
+| unity_AmbientSky         | fixed4 | Sky ambient lighting color in gradient ambient lighting case.                 |
+| unity_AmbientEquator     | fixed4 | Equator ambient lighting color in gradient ambient lighting case.             |
+| unity_AmbientGround      | fixed4 | Ground ambient lighting color in gradient ambient lighting case.              |
+| UNITY_LIGHTMODEL_AMBIENT | fixed4 | Ambient lighting color (sky color in gradient ambient case). Legacy variable. |
+
+# 47_Wrap up Basic Lighting Model
+
+# 48_Advanced Lighting Model
+# 49_Hemispherical Lighting Model
+# 50_Image Based Lighting
+# 51_Irradiance Environment Map
+# 52_Image Based Reflection_intro
+# 55_Image Based Refraction_intro1
+# 58_Image Based Fresnel_intro
+# 61. Coordinate Spaces
+# 62. Transforming Coordinate Spaces
+# 63. Shadow Mapping - intro
+# 66. BRDF - intro
+# 67. BRDF - Spherical Coordinate System
+# 68. BRDF - Anisotropy - intro

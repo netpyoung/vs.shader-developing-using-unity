@@ -3,7 +3,7 @@
 // Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
 // Upgrade NOTE: replaced '_World2Object' with 'unity_WorldToObject'
 
-Shader "ShaderDev/43Specular"
+Shader "ShaderDev/46Ambient"
 {
 	Properties 
 	{
@@ -16,6 +16,8 @@ Shader "ShaderDev/43Specular"
 		_SpecularMap("Specular map", 2D) = "black" {}
 		_SpecularFactor("Specular %", Range(0, 1)) = 1
 		_SpecularPower("Specular power", Float) = 1
+		[Toggle] _AmbientMode("Ambient light?", Float) = 0
+		_AmbientFactor("Ambient %", Range(0, 1)) = 1
 	}
 	
 	Subshader
@@ -38,7 +40,7 @@ Shader "ShaderDev/43Specular"
 			#pragma fragment frag
 			#pragma shader_feature _USENORMAL_OFF _USENORMAL_ON
 			#pragma shader_feature _LIGHITING_OFF _LIGHTING_VERT _LIGHTING_FRAG
-
+			#pragma shader_feature _AMBIENTMODE_OFF _AMBIENTMODE_ON
 			// https://docs.unity3d.com/Manual/SL-PlatformDifferences.html
 			#pragma target 3.0
 
@@ -58,6 +60,10 @@ Shader "ShaderDev/43Specular"
 			uniform sampler2D _SpecularMap;
 			uniform float _SpecularFactor;
 			uniform float _SpecularPower;
+
+			#if _AMBIENTMODE_ON
+				uniform float _AmbientFactor;
+			#endif
 
 			//https://msdn.microsoft.com/en-us/library/windows/desktop/bb509647%28v=vs.85%29.aspx#VS
 			struct vertexInput
@@ -119,6 +125,10 @@ Shader "ShaderDev/43Specular"
 					float3 worldSpaceViewDir = normalize(_WorldSpaceCameraPos - worldPos);
 					float3 specularColor = SpecularBlinnPhong(o.normalWorld, lightDir, worldSpaceViewDir, specularMap, _SpecularFactor, attenuation, _SpecularPower);
 					o.surfaceColor = float4(diffuseColor + specularColor, 1);
+					#if _AMBIENTMODE_ON
+						float3 ambientColor = _AmbientFactor * UNITY_LIGHTMODEL_AMBIENT;
+						o.surfaceColor = float4(o.surfaceColor.rgb + ambientColor, 1);
+					#endif
 				#endif
 				return o;
 			}
@@ -140,6 +150,12 @@ Shader "ShaderDev/43Specular"
 					float4 specularMap = tex2Dlod(_SpecularMap, i.texcoord);
 					float3 worldSpaceViewDir = normalize(_WorldSpaceCameraPos - i.posWorld);
 					float3 specularColor = SpecularBlinnPhong(i.normalWorld, lightDir, worldSpaceViewDir, specularMap, _SpecularFactor, attenuation, _SpecularPower);
+
+					#if _AMBIENTMODE_ON
+						float3 ambientColor = _AmbientFactor * UNITY_LIGHTMODEL_AMBIENT;
+						return float4(diffuseColor + specularColor + ambientColor, 1);
+					#endif
+
 					return float4(diffuseColor + specularColor, 1);
 				#elif _LIGHTING_VERT
 					return i.surfaceColor;

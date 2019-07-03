@@ -7,9 +7,9 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: status_mat_spectular
-  m_Shader: {fileID: 4800000, guid: c09464e4dc1bf0948be5da80dee47762, type: 3}
-  m_ShaderKeywords: _LIGHTING_VERT _USENORMAL_ON
+  m_Name: status_mat_ambient
+  m_Shader: {fileID: 4800000, guid: eca066e8ca846f4478ed302a1d733ef6, type: 3}
+  m_ShaderKeywords: _LIGHTING_FRAG _USENORMAL_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -64,6 +64,8 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
+    - _AmbientFactor: 1
+    - _AmbientMode: 0
     - _BumpScale: 1
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
@@ -72,7 +74,7 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _Lighting: 1
+    - _Lighting: 2
     - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1
