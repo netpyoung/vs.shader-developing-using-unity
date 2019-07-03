@@ -1010,12 +1010,51 @@ float4 specularMap = tex2Dlod(_SpecularMap, o.texcoord);
 | unity_AmbientGround      | fixed4 | Ground ambient lighting color in gradient ambient lighting case.              |
 | UNITY_LIGHTMODEL_AMBIENT | fixed4 | Ambient lighting color (sky color in gradient ambient case). Legacy variable. |
 
-# 47_Wrap up Basic Lighting Model
-
 # 48_Advanced Lighting Model
+- Shadow
+- Inter Object interaction
+- Energy Balance
+    - Energy balanced shading model
+
+
 # 49_Hemispherical Lighting Model
+- 오브젝트는 구의 센터에  빛의 방향이 구의 바깥에서 안쪽으로 비춘다 가정.
+- Hemispherical Lighting Model
+    - 2 half sphere
+
+|       |        |          |
+|-------|--------|----------|
+| upper | sky    | N.L > 0  |
+| lower | ground | N.L <= 0 |
+
+
 # 50_Image Based Lighting
+- 많은 라이트를 실시간 계산하기에는 무리
+
+- light정보를 텍스쳐에 저장
+- light probe로부터 환경맵(sphere, cube)을 제작
+- 환경 맵으로부터 light계산
+
+## light정보를 텍스쳐에 저장하는 기법에는 여러가지 테크닉이 있음.
+### Chrome ball
+- 눈에 가급적 많은 구역을 담을 수 있도록 카메라를 멀리 배치
+- 맵에 크롬볼(chrome ball)을 배치(눈에 보이는 방향으로부터 모든 라이트 정보를 저장) - 이러한 크롬볼을 light probe라 함.
+### Fish eye lens
+- 185도까지 캡쳐 가능한 렌즈가 있음.
+- 2개로 묶어 360도를 캡쳐. 환경맵을 만듬.
+
+
 # 51_Irradiance Environment Map
+- Irradiance - 방사 조도(무엇에서 나오는 빛의 양을 나타내는 단위)
+- 기존 환경맵 특정 노멀, 특정 빛의 방향을 저장함 => 오브젝트를 회전하거나 이동시킬 수 없음.
+
+- 맵에 빛을 반사시킬 구를 가져다 놓고, 모든 빛에 대해 반사된 값을 Irradiance Environment Map에 저장.
+    - 미리 diffuse를 계산하여 Irradiance 환경맵에 저장.
+- 렌더링할때에는, 어떠한 물체의 노말값을, 환경맵을 구었을 때의 구의 노말값이라고 가정하고, 미리 구어둔 맵의 값을 가져옴.
+    - 그때 쓰는 함수가 texCube임.
+    -  `color = texCube(Irradiance-Environment-Map, normal)`
+
+
 # 52_Image Based Reflection_intro
 # 55_Image Based Refraction_intro1
 # 58_Image Based Fresnel_intro
