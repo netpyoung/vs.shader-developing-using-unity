@@ -1053,14 +1053,53 @@ float4 specularMap = tex2Dlod(_SpecularMap, o.texcoord);
 - 렌더링할때에는, 어떠한 물체의 노말값을, 환경맵을 구었을 때의 구의 노말값이라고 가정하고, 미리 구어둔 맵의 값을 가져옴.
     - 그때 쓰는 함수가 texCube임.
     -  `color = texCube(Irradiance-Environment-Map, normal)`
+- 단점은, 거리정보가 없기에, 빛의 거리정보가 없기에 따른 감쇠를 표현할 수 없음.
 
+
+## Irradiance map
+- Irradiance map
+    - 6면체
+    - 각 면마다 4개의 텍셀을 지님
+    - 중심에서 텍셀까지의 방향(노말방향)을 구함
+- Lighting Environment map
+
+``` csharp
+foreach (irr_texel in irradiance_map.texels)
+{
+    N = calculateDirectionFromCenter(irr_texel);
+    diffuseColor = 0
+    foreach (light_texel in lighting_environment_map.texels)
+    {
+        L = calculateDirectionFromCenter(light_texel)
+        diffuseColor += Vector.Dot(N, L)
+    }
+}
+```
 
 # 52_Image Based Reflection_intro
+- CubeMap
+- Reflection Factor
+- Detail
+- Exposure
+
+- texCUBElod  - (level of detail)
+- texCUBElod(cubeMap, xyzw) (xyz - normal direction, w - detail(max: 1))
+
+53
+
+
 # 55_Image Based Refraction_intro1
+- 굴절률(index of refraction)
+
 # 58_Image Based Fresnel_intro
 # 61. Coordinate Spaces
 # 62. Transforming Coordinate Spaces
 # 63. Shadow Mapping - intro
 # 66. BRDF - intro
+~~~
+BRDF 는 "Bidirectional Reflectance Distribution Function" 의 머리글자입니다. 우리 말로는 "양방향 반사율 분포 함수"입니다. 이 BRDF 는 Diffuse BRDF 와 Specular BRDF 로 나뉩니다
+출처: https://lifeisforu.tistory.com/386 [그냥 그런 블로그]
+~~~
+
 # 67. BRDF - Spherical Coordinate System
 # 68. BRDF - Anisotropy - intro
