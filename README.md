@@ -991,7 +991,8 @@ Blinn-Phong Reflection Model : max(0, (N.H))^S
 // tex2Dlod - 2D texture lookup with specified level of detail and optional texel offset.
 // samp : Sampler to lookup.
 // s.xy : Coordinates to perform the lookup.
-// s.w : Level of detail.
+// s.w : Level of detail. (0 ~ n-1) (가장큰)첫번째 밉맵이 0
+
 
 #pragma target 3.0
 float4 specularMap = tex2Dlod(_SpecularMap, o.texcoord);
@@ -1077,15 +1078,18 @@ foreach (irr_texel in irradiance_map.texels)
 ```
 
 # 52_Image Based Reflection_intro
+
+IBL(Image Based Lighting)-Reflection
+
+구형 반사체를 큐브맵 안에 위치시키고, 반사체에서 반사되어 큐브맵에 맏닿은 정보를 저장한다.
+
 - CubeMap
 - Reflection Factor
 - Detail
 - Exposure
 
-- texCUBElod  - (level of detail)
+## texCUBElod  - LOD는 (level of detail)를 의미.
 - texCUBElod(cubeMap, xyzw) (xyz - normal direction, w - detail(max: 1))
-
-53
 
 
 # 55_Image Based Refraction_intro1
