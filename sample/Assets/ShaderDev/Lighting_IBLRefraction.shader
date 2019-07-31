@@ -3,7 +3,7 @@
 // Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
 // Upgrade NOTE: replaced '_World2Object' with 'unity_WorldToObject'
 
-Shader "ShaderDev/53Lighting_IBLReflection"
+Shader "ShaderDev/57Lighting_IBLRefraction"
 {
 	Properties 
 	{
@@ -25,6 +25,9 @@ Shader "ShaderDev/53Lighting_IBLReflection"
 		_Cube("Cube Map", Cube) = "" {}
 		_Detail("Reflection Detail", Range(1, 9)) = 1.0
 		_ReflectionExposure("HDR Exposure", Float) = 1.0
+
+		_RefractionFactor("Refraction %", Range(0, 1)) = 1
+		_RefractiveIndex("Refractive Index", Range(0, 50)) = 1
 	}
 	
 	Subshader
@@ -77,10 +80,19 @@ Shader "ShaderDev/53Lighting_IBLReflection"
 			#endif
 
 			// IBL
-			uniform samplerCUBE _Cube;
-			uniform float _ReflectionFactor;
-			uniform half _Detail;
-			uniform float _ReflectionExposure;
+			#if _IBLMODE_REFL || _IBLMODE_REFR
+				uniform samplerCUBE _Cube;
+				uniform half _Detail;
+				uniform float _ReflectionExposure;
+			#endif
+			#if _IBLMODE_REFL
+				uniform float _ReflectionFactor;
+			#endif
+
+			#if _IBLMODE_REFR
+				uniform float _RefractionFactor;
+				uniform float _RefractiveIndex;
+			#endif
 
 			//https://msdn.microsoft.com/en-us/library/windows/desktop/bb509647%28v=vs.85%29.aspx#VS
 			struct vertexInput
@@ -107,7 +119,7 @@ Shader "ShaderDev/53Lighting_IBLReflection"
 				#if _LIGHTING_VERT
 					float4 surfaceColor : COLOR0;
 				#else
-					#if _IBLMODE_REFL
+					#if _IBLMODE_REFL || _IBLMODE_REFR
 						float4 surfaceColor : COLOR0;
 					#endif
 				#endif
@@ -155,12 +167,21 @@ Shader "ShaderDev/53Lighting_IBLReflection"
 						float3 worldRefl = reflect(-worldSpaceViewDir, o.normalWorld.xyz);
 						o.surfaceColor.rgb *= IBLRefl(_Cube, _Detail, worldRefl, _ReflectionExposure, _ReflectionFactor);
 					#endif
+					#if _IBLMODE_REFR
+						float3 worldRefr = refract(-worldSpaceViewDir, o.normalWorld.xyz, 1 / _RefractiveIndex);
+						o.surfaceColor.rgb *= IBLRefl(_Cube, _Detail, worldRefr, _ReflectionExposure, _RefractionFactor);
+					#endif
 				#endif
 				#if !_LIGHTING_VERT
 					#if _IBLMODE_REFL
 						float3 worldSpaceViewDir = normalize(_WorldSpaceCameraPos - o.posWorld);
 						float3 worldRefl = reflect(-worldSpaceViewDir, o.normalWorld.xyz);
 						o.surfaceColor.rgb += IBLRefl(_Cube, _Detail, worldRefl, _ReflectionExposure, _ReflectionFactor);
+					#endif
+					#if _IBLMODE_REFR
+						float3 worldSpaceViewDir = normalize(_WorldSpaceCameraPos - o.posWorld);
+						float3 worldRefr = refract(-worldSpaceViewDir, o.normalWorld.xyz, 1 / _RefractiveIndex);
+						o.surfaceColor.rgb += IBLRefl(_Cube, _Detail, worldRefr, _ReflectionExposure, _RefractionFactor);
 					#endif
 				#endif
 				return o;
@@ -198,6 +219,10 @@ Shader "ShaderDev/53Lighting_IBLReflection"
 						float3 worldRefl = reflect(-worldSpaceViewDir, worldNormalAtPixel);
 						finalColor.rgb *= IBLRefl(_Cube, _Detail, worldRefl, _ReflectionExposure, _ReflectionFactor);
 					#endif
+					#if _IBLMODE_REFL
+						float3 worldRefr = refract(-worldSpaceViewDir, worldNormalAtPixel, 1 / _RefractiveIndex);
+						finalColor.rgb *= IBLRefl(_Cube, _Detail, worldRefr, _ReflectionExposure, _RefractionFactor);
+					#endif
 				#elif _LIGHTING_VERT
 					finalColor = i.surfaceColor;
 				#else
@@ -205,6 +230,11 @@ Shader "ShaderDev/53Lighting_IBLReflection"
 						float3 worldSpaceViewDir = normalize(_WorldSpaceCameraPos - i.posWorld);
 						float3 worldRefl = reflect(-worldSpaceViewDir, worldNormalAtPixel);
 						finalColor.rgb += IBLRefl(_Cube, _Detail, worldRefl, _ReflectionExposure, _ReflectionFactor);
+					#endif
+					#if _IBLMODE_REFR
+						float3 worldSpaceViewDir = normalize(_WorldSpaceCameraPos - i.posWorld);
+						float3 worldRefr = refract(-worldSpaceViewDir, worldNormalAtPixel, 1 / _RefractiveIndex);
+						finalColor.rgb += IBLRefl(_Cube, _Detail, worldRefr, _ReflectionExposure, _RefractionFactor);
 					#endif
 				#endif
 

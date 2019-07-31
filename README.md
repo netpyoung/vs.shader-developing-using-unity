@@ -1093,7 +1093,14 @@ IBL(Image Based Lighting)-Reflection
 
 
 # 55_Image Based Refraction_intro1
+
+- 매질에 따라 direction / speed가 달라짐.
+
 - 굴절률(index of refraction)
+- 굴절률 n = 진공속에서의 빛의 속도 / 매질 내에서 빛의 속도
+
+- 56: 굴절 구하는 공식 - skip
+
 
 # 58_Image Based Fresnel_intro
 # 61. Coordinate Spaces
