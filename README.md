@@ -1,109 +1,78 @@
-# TODO
-- [white noise](https://www.ronja-tutorials.com/2018/09/02/white-noise.html)
-- [날아다니는 나비 만들기](https://holdimprovae.blogspot.com/2019/02/studyunityshader.html)
-- [Hbao Plus Analysis 0](https://hrmrzizon.github.io/2017/11/15/hbao-plus-analysis-0/)
-- [한정현 컴퓨터그래픽스 (11장- 오일러 변환 및 쿼터니언)](https://www.youtube.com/watch?v=XgE7tOSc7AU&list=PLYEC1V9tJOl03WLDoUEKbiYW_Xt4W6LTl&index=12)
-- [한정현 컴퓨터그래픽스 (15장 - 쉐도우 맵)](https://www.youtube.com/watch?v=kCuEtQh91U8&list=PLYEC1V9tJOl03WLDoUEKbiYW_Xt4W6LTl&index=16)
-- [Gooch shading](https://en.wikipedia.org/wiki/Gooch_shading)
+# ShaderDev
 
-- https://docs.unity3d.com/Manual/SL-DataTypesAndPrecision.html
-- https://docs.unity3d.com/Manual/SL-ShaderPerformance.html
+## 00
 
-# mipmap
-- [유니티에서의 텍스쳐 밉맵과 필터링 (Texture Mipmap & filtering in Unity)](https://ozlael.tistory.com/45)
-    - 텍스쳐에서 밉맵이란 텍스쳐에게 있어서 LOD같은 개념입니다
-
-- [tex2Dlod와 tex2Dbias의 비교연구](https://chulin28ho.tistory.com/258)
-
-# TODO texture
-## ETC2
-- OpenGL 3.0 이상.
-## ASTC(Adaptive Scalable Texture Compression)
-- 손실압축
-- OpenGL 3.2 이상 혹은 OpenGL ES 3.1 + AEP(Android Extension Pack)
-- iOS는 A8 processor를 사용하기 시작하는 기종부터 사용이 가능합니다. iPhone 6, iPad mini 4가 이에 해당합니다.
-- 출처: https://ozlael.tistory.com/84?category=612211 [오즈라엘]
-
-# 00.
-- https://shaderdev.com/
+- <https://shaderdev.com/>
 - Chayan Vinayak Goswami
 - TA 8 years
 
-# 01. What is Shader
+## 01. What is Shader
 
-  쉐이더란 화면에 출력할 픽셀의 위치와 색상을 계산하는 함수
-  쉐이더(shader)란 '색의 농담, 색조, 명암 효과를 주다.'라는 뜻을 가진 shade란 동사와 행동의 주체를 나타내는 접미사 '-er'을 혼합한 단어입니다. 즉, 색의 농담, 색조, 명암 등의 효과를 주는 주체가 쉐이더란 뜻
-  - https://kblog.popekim.com/2011/11/01-part-1.html
+``` ref
+    쉐이더란 화면에 출력할 픽셀의 위치와 색상을 계산하는 함수
+    쉐이더(shader)란 '색의 농담, 색조, 명암 효과를 주다.'라는 뜻을 가진 shade란 동사와 행동의 주체를 나타내는 접미사 '-er'을 혼합한 단어입니다.
+    즉, 색의 농담, 색조, 명암 등의 효과를 주는 주체가 쉐이더란 뜻
 
+    - https://kblog.popekim.com/2011/11/01-part-1.html
+```
 
-|     | 코어갯수   | 연산                 |
-| --- | ---------- | -------------------- |
-| CPU | 몇개       | serial operation     |
-| GPU | 수천개     | parallel operation   |
+|     | 코어갯수 | 연산                 |
+| --- | ---- | ------------------ |
+| CPU | 몇개   | serial operation   |
+| GPU | 수천개  | parallel operation |
 
+``` ref
+    강력한 마이크로 프로세서를 몇개 또는 큰 파이프를 쓰는 대신,
+    매우 작은 마이크로 프로세서들을 한번에 돌리는 것이다. 그것이 바로 GPU(Graphic Processor Unit).
 
-| 쉐이더              | 기능                                                     |
-| ------------------- | -------------------------------------------------------- |
-| Vertex              |                                                          |
-| Geometry            | input primitive                                          |
-| Fragment / Pixel    |                                                          |
-| Compute             | 렌더링 파이프라인에 속해 있지 않음. GPU 병렬 처리 목적   |
-| Tessellation / Hull | OpenGL 4, DirectX3D 11                                   |
+    - https://thebookofshaders.com/01/?lan=kr
+```
 
-- 2016 WWDC - Apple, Metal tesselation pipeline - fixed function shader (하드웨어 내장)
+| 쉐이더                 | 기능                                |
+| ------------------- | --------------------------------- |
+| Vertex              |                                   |
+| Geometry            | input primitive                   |
+| Fragment / Pixel    |                                   |
+| Compute             | 렌더링 파이프라인에 속해 있지 않음. GPU 병렬 처리 목적 |
+| Tessellation / Hull | OpenGL 4, DirectX3D 11, Metal     |
 
+## 02. Working of a Shader
 
+### 좌표계
 
-# 02. Working of a Shader
-**TODO 정리 다시할것.**
+- ref: <https://learnopengl.com/Getting-started/Coordinate-Systems>
 
-## Vertex Input
-- position **
-- normal
-- color
-- ...
+![좌표계]
 
-## Vertex Shader
+### 파이프라인
 
-## Vertex Output
-- position
-- other infos
+- ref: <https://vulkan-tutorial.com/Drawing_a_triangle/Graphics_pipeline_basics/Introduction>
 
-## Rasterize
-하드웨어
+![vulkan_simplified_pipeline](res/vulkan_simplified_pipeline.svg)
 
-1. 지오메트리 구역의 픽셀을 찾음.
-2. Vertex-Output을 이용하여 데이터들을 interpolate하여 픽셀쉐이더로 보냄.
+### Vertex Shader Input/Output
 
-geometry에 어떤 픽셀들이 화면에 그려지는지 결정함.
-sampling
-pixel - 하나 이상의 샘플을 지닐 수 있다.
+- Vertex Shader Input
+  - Position(Local/Object Space)
+  - Normal
+  - Color
+  - ...
+- Vertex Shader Output
+  - Position(Clip Space)
+  - other infos
 
-ex)
-2개의 샘플중 하나의 샘플만 지오메트리에 속할때
-픽셀 쉐이더에 의해 계산되는 색이 평균화되어 픽셀에 부여된다.
+### Rasterize
 
-fragment : contribute to find color of pixel
-multi-sampling
+1. geometry에 어떤 Sample들이 화면에 그려지는지 결정하고(sampling)
+2. Vertex-Output을 이용하여 데이터(Fragment)들을 interpolate하여 Fragment Shader로 넘김.
 
+### Fragment Shader
 
-A Fragment is a collection of values produced by the Rasterizer. Each fragment represents a sample-sized segment of a rasterized Primitive.
-Fragment
-Sample
-Pixel
+Fragment를 이용하여, 각 픽셀의 값(색)을 구한다.
 
-- ??? Sample과 Fragment는 뭐야?
-https://stackoverflow.com/questions/31173002/what-is-the-difference-between-a-sample-a-pixel-and-a-fragment
+## 03. Components of a Shader
 
-        The size covered by a fragment is related to the pixel area, but rasterization can produce multiple fragments from the same triangle per-pixel, depending on various multisampling parameters and OpenGL state. There will be at least one fragment produced for every pixel area covered by the primitive being rasterized
-
-
-## Pixel Shader
-
-
-
-# 03. Components of a Shader
-~~~
+``` shader
 Properties
 
 Sub-Shader
@@ -113,7 +82,7 @@ Sub-Shader
   Pass
      occlusion pass
      lighting pass
-     beuty(diffuse, color) pass
+     beauty(diffuse, color) pass
 
      Vertext-Shader-Input
      Vertext-Shader-Output
@@ -121,13 +90,21 @@ Sub-Shader
      Fragment-Shader-Input
      Fragment-Shader-Output
 
-Fallback
-~~~
+     Vertex-Shader
+     Fragment-Shader
 
-# 04. Bare-bones shader
-~~~ shader
-Shader "x"
+Fallback
+```
+
+## 04. Bare-bones shader
+
+``` shader
+Shader "ShaderName"
 {
+    CGINCLUDE
+    // 여러 SubShader에서 공통으로 쓰고 싶을때 넣는 곳.
+    ENDCG
+
     SubShader
     {
         Pass
@@ -164,59 +141,91 @@ Shader "x"
         }
     }
 }
-~~~
+```
+
+## 05. Model-View-Projection Matrix
+
+![MVP](res/opengl/MVP.png)
+![model_to_world_to_camera](res/opengl/model_to_world_to_camera.png)
+![model_to_world_to_camera_to_homogeneous](res/opengl/model_to_world_to_camera_to_homogeneous.png)
+![좌표계]
 
 
+|                   |      |                          |
+| ----------------- | ---- | ------------------------ |
+| Coordinate System | 좌표계  | 좌표를 이용하여, 특정 요소의 위치를 정의. |
+| Coordinate Space  | 좌표공간 | 한점의 위치가 다른 점과의 관계로 규정.   |
 
-# 05. Model-View-Projection Matrix
-~~~
-object space
-  - Model Matrix
-world space
-  - View Matrix
-view space
-  - Projection Matrix
-projection space
-~~~
+- Vector4 이유
 
+    | (x, y, z, w) |           |                   |
+    | ------------ | --------- | ----------------- |
+    | w == 1       | (x,y,z,1) | position in space |
+    | w == 0       | (x,y,z,0) | direction         |
 
-# 06. Depth Sorting / Z-Sorting
-* Z-Sorting -> Render Queue -> Painter's algorithm
+- Matrix 4x4 이유
 
+    ``` ref
+    선형변환으로 확대/축소, 회전, 찌그러뜨리기(skewing)의 조합을 표현할 수 있다고 배웠죠.
+    선형변환만으로는 평행이동을 만들어낼 수 없다는 것이 문제입니다
+    ...
+    선형변환에 상수항이 첨가된 변환을 affine 변환이라고
+    ...
+
+    - https://gpgstudy.com/forum/viewtopic.php?t=25011
+    ```
+
+- 예) 이동 매트릭스 x 방향벡터
+
+    ![translationExampleDirection1](res/opengl/translationExampleDirection1.png)
+
+- 예) 이동 매트릭스 x 위치백터
+
+    ![translationExamplePosition1](res/opengl/translationExamplePosition1.png)
+
+## 06. Depth Sorting / Z-Sorting
+
+- Z-Sorting -> Render Queue -> Painter's algorithm(카메라와 거리 기반)
 - Sorting (Depth Sorting / Z-Sorting)
-~~~
-ZWrite On  ;; override render Queue (forcing z-order)
-ZWrite Off
-~~~
+
+    ``` ref
+    ZWrite On  ;; override render Queue (forcing z-order)
+    ZWrite Off
+    ```
 
 - Render Queue
 
-~~~
-Tags { "Queue" = "Geometry-1" }
-~~~
-   0 Rendered First = back
-5000 Rendered Last  = Front
+    ``` ref
+    Tags { "Queue" = "Geometry-1" }
+    ```
 
-| min   | default | max  |             |
-| ----- | ------- | ---- | ----------- |
-| 0     | 100     | 1499 | Background  |
-| 150   | 2000    | 2399 | Geometry    |
-| 2400  | 2450    | 2699 | AlphaTest   |
-| 2700  | 3000    | 3599 | Transparent |
-| 3600  | 4000    | 5000 | Overlay     |
+| min  | default | max  |             |
+| ---- | ------- | ---- | ----------- |
+| 0    | 100     | 1499 | Background  |
+| 150  | 2000    | 2399 | Geometry    |
+| 2400 | 2450    | 2699 | AlphaTest   |
+| 2700 | 3000    | 3599 | Transparent |
+| 3600 | 4000    | 5000 | Overlay     |
 
-- Painter's algorithm
-  Based on distance from camera.
+|      |                |       |
+| ---- | -------------- | ----- |
+| 0    | Rendered First | back  |
+| 5000 | Rendered Last  | Front |
 
-# 07. Sub Shader Tags
+-----------------------------------------------
+
+## 07. Sub Shader Tags
+
 Tags는 `,`로 구분하지 않는다.(공백으로 구분.)
 
-## Queue
-## IgnoreProjection
+### Queue
+
+### IgnoreProjection
+
 "IgnoreProjection" = "True"
 "IgnoreProjection" = "False"
 
-## RenderType
+### RenderType
 
 보통 RenderType는 Queue와 같다.
 "Queue" = "Transparent"
@@ -224,9 +233,8 @@ Tags는 `,`로 구분하지 않는다.(공백으로 구분.)
 
 Camera.main.SetReplacement("X-rayShader", "Opaque")
 
+## 08. Blending
 
-
-# 08 Blending
 Z-test => Pixel Shader => (Blending)
 블랜딩 하는 경우는 보통, 투명 / 반투명한 픽셀이 다른 픽셀 앞에 올때.
 
@@ -235,18 +243,13 @@ srcFactor: 작업 대상
 dstFactor: 컬러버퍼에 있는 값들
 blendOp: +(default), min, max
 
+## 09. Texture Mapping
 
+    Direct X     +-----+
+                 |     |
+    opengl/unity +-----+
 
-
-# 09. Texture Mapping
-
-~~~
-Direct X     +-----+
-             |     |
-opengl/unity +-----+
-~~~
-
-~~~ shader
+``` shader
 Properties
 {
     _MainTex("Main Texture", "2D") = "white" {}
@@ -259,10 +262,9 @@ Offset z, w
 
 Texture 속성
 Wrap Mode - Clamp / Repeat
-~~~
+```
 
-
-# 10. Gradient Pattern
+## 10. Gradient Pattern
 Quad, Plane의 UV맵핑이 다르다.
 Quad는 좌하단.
 Plane은 우하단
@@ -270,14 +272,12 @@ Plane은 우하단
 Mac : Grapher
 Other: https://www.desmos.com/calculator
 
-
-
-# 11. Wave Functions
+## 11. Wave Functions
 sqrt / sin / cos / tan
 
+## 12. Line Pattern
 
-# 12. Line Pattern
-~~~ shader
+``` shader
 float drawLine(float2 uv, float start, float end)
 {
     if (start < uv.x && uv.x < end)
@@ -287,9 +287,9 @@ float drawLine(float2 uv, float start, float end)
 
     return 0;
 }
-~~~
+```
 
-
+----------------------------------------
 
 # 13. Union and Intersection
 #minor #pass
@@ -328,7 +328,7 @@ float smoothstep(float a, float b, float x)
 ~~~
 
 | from | to  |            |        |
-|------|-----|------------|--------|
+| ---- | --- | ---------- | ------ |
 | 1    | 0.5 | texcoord.x | return |
 | 1    | 0.5 | 0          | 1      |
 | 1    | 0.5 | 0.25       | 1      |
@@ -550,21 +550,21 @@ world-space binormal = cross(world-space normal, world-space tangent)
 
 - DXT1 포맷을 이용.
 
-| V | color | channel | bit |
-|---|-------|---------|-----|
-| X | R     | color0  | 16  |
-| Y | G     | color1  | 16  |
-| Z | B     | x       | 0   |
+| V   | color | channel | bit |
+| --- | ----- | ------- | --- |
+| X   | R     | color0  | 16  |
+| Y   | G     | color1  | 16  |
+| Z   | B     | x       | 0   |
 
 - DXT5nm 포맷을 이용(퀄리티 업.)
 
-| V | color | channel       | bit |
-|---|-------|---------------|-----|
-| X | R     | a0, a1        | 16  |
-|   |       | alpha indices | 48  |
-| Y | G     | color0,1      | 32  |
-|   |       | color indices | 32  |
-| Z | B     | x             | 0   |
+| V   | color | channel       | bit |
+| --- | ----- | ------------- | --- |
+| X   | R     | a0, a1        | 16  |
+|     |       | alpha indices | 48  |
+| Y   | G     | color0,1      | 32  |
+|     |       | color indices | 32  |
+| Z   | B     | x             | 0   |
 
 - xyzw, wy => _g_r => rg => xyn // r이 뒤로 있으므로, 한바퀴 돌려줘야함.
 - `normal.xy = packednormal.wy * 2 - 1;` (0 ~ 1 => -1 ~ 1)
@@ -574,7 +574,7 @@ world-space binormal = cross(world-space normal, world-space tangent)
 
 ## DXT1, (RGB 5:6:5), (RGBA 5:5:5:1)
 |               |                |
-|---------------|----------------|
+| ------------- | -------------- |
 | color0        | 16             |
 | color1        | 16             |
 | color indices | 4 * 4 * 2 = 32 |
@@ -586,7 +586,7 @@ world-space binormal = cross(world-space normal, world-space tangent)
 ## DXT3
 
 |               |                |
-|---------------|----------------|
+| ------------- | -------------- |
 | alpha         | 64             |
 | color0        | 16             |
 | color1        | 16             |
@@ -600,7 +600,7 @@ world-space binormal = cross(world-space normal, world-space tangent)
 ## DXT5
 
 |               |                |
-|---------------|----------------|
+| ------------- | -------------- |
 | a0            | 8              |
 | a1            | 8              |
 | alpha indices | 48             |
@@ -663,10 +663,10 @@ ST - surface's coordinate space.
 
     o.texcoord.xy = (v.texcoord.xy * _MainTex_ST.xy + _MainTex_ST.zw)
 
-|    |        |
-|----|--------|
-| xy | tiling |
-| zw | offset |
+|     |        |
+| --- | ------ |
+| xy  | tiling |
+| zw  | offset |
 ~~~
 
 * 나중에 확인해볼껏 (http://egloos.zum.com/chulin28ho/v/5339578)
@@ -827,22 +827,22 @@ _변수명("레이블", 타입) = 디폴트값
 ## BEADS(구슬 목걸이)
 - `B`asic Lighting Model
 
-|            |          |                                    |
-|------------|----------|------------------------------------|
-| `E`misive  | 발산     | 발광체                             |
-| `A`mbient  | 주변광   | 전체적                             |
-| `D`iffuse  | 난반사광 | 특정방향, 고르게 반사              |
+|            |      |                     |
+| ---------- | ---- | ------------------- |
+| `E`misive  | 발산   | 발광체                 |
+| `A`mbient  | 주변광  | 전체적                 |
+| `D`iffuse  | 난반사광 | 특정방향, 고르게 반사        |
 | `S`pecular | 전반사광 | 특정방향, 특정방향으로 정확히 반사 |
 
 |          |                       |                 |
-|----------|-----------------------|-----------------|
+| -------- | --------------------- | --------------- |
 | vertex   | per vertex lighting   | vertex shader   |
 | fragment | per fragment lighting | fragment shader |
 
 - Unity support 4 Rendering Path
 
 |                                    |                 |
-|------------------------------------|-----------------|
+| ---------------------------------- | --------------- |
 | Forward Rendering                  | Base Pass       |
 |                                    | Additional Pass |
 | Legacy Deferred(Deferred Lighting) |                 |
@@ -1005,7 +1005,7 @@ float4 specularMap = tex2Dlod(_SpecularMap, o.texcoord);
 # 45. Ambient Reflection - intro
 
 |                          |        |                                                                               |
-|--------------------------|--------|-------------------------------------------------------------------------------|
+| ------------------------ | ------ | ----------------------------------------------------------------------------- |
 | unity_AmbientSky         | fixed4 | Sky ambient lighting color in gradient ambient lighting case.                 |
 | unity_AmbientEquator     | fixed4 | Equator ambient lighting color in gradient ambient lighting case.             |
 | unity_AmbientGround      | fixed4 | Ground ambient lighting color in gradient ambient lighting case.              |
@@ -1024,7 +1024,7 @@ float4 specularMap = tex2Dlod(_SpecularMap, o.texcoord);
     - 2 half sphere
 
 |       |        |          |
-|-------|--------|----------|
+| ----- | ------ | -------- |
 | upper | sky    | N.L > 0  |
 | lower | ground | N.L <= 0 |
 
@@ -1108,9 +1108,42 @@ IBL(Image Based Lighting)-Reflection
 # 63. Shadow Mapping - intro
 # 66. BRDF - intro
 ~~~
-BRDF 는 "Bidirectional Reflectance Distribution Function" 의 머리글자입니다. 우리 말로는 "양방향 반사율 분포 함수"입니다. 이 BRDF 는 Diffuse BRDF 와 Specular BRDF 로 나뉩니다
+BRDF 는 "Bidirectional Reflectance Distribution Function" 의 머리글자입니다. 우리 말로는 "양방향 반사율 분포 함수"입니다. 이 BRDF 는 Diffuse BRDF 와 Specular BRDF 로 나뉩니다.
 출처: https://lifeisforu.tistory.com/386 [그냥 그런 블로그]
 ~~~
 
+BRDF - ex) 뷰 방향과 라이트 방향으로부터, 불투명한 표면에 반사되는 방식을 구함.
+
 # 67. BRDF - Spherical Coordinate System
 # 68. BRDF - Anisotropy - intro
+
+
+# TODO
+- [white noise](https://www.ronja-tutorials.com/2018/09/02/white-noise.html)
+- [날아다니는 나비 만들기](https://holdimprovae.blogspot.com/2019/02/studyunityshader.html)
+- [Hbao Plus Analysis 0](https://hrmrzizon.github.io/2017/11/15/hbao-plus-analysis-0/)
+- [한정현 컴퓨터그래픽스 (11장- 오일러 변환 및 쿼터니언)](https://www.youtube.com/watch?v=XgE7tOSc7AU&list=PLYEC1V9tJOl03WLDoUEKbiYW_Xt4W6LTl&index=12)
+- [한정현 컴퓨터그래픽스 (15장 - 쉐도우 맵)](https://www.youtube.com/watch?v=kCuEtQh91U8&list=PLYEC1V9tJOl03WLDoUEKbiYW_Xt4W6LTl&index=16)
+- [Gooch shading](https://en.wikipedia.org/wiki/Gooch_shading)
+
+- https://docs.unity3d.com/Manual/SL-DataTypesAndPrecision.html
+- https://docs.unity3d.com/Manual/SL-ShaderPerformance.html
+
+# mipmap
+- [유니티에서의 텍스쳐 밉맵과 필터링 (Texture Mipmap & filtering in Unity)](https://ozlael.tistory.com/45)
+    - 텍스쳐에서 밉맵이란 텍스쳐에게 있어서 LOD같은 개념입니다
+
+- [tex2Dlod와 tex2Dbias의 비교연구](https://chulin28ho.tistory.com/258)
+
+# TODO texture
+## ETC2
+- OpenGL 3.0 이상.
+## ASTC(Adaptive Scalable Texture Compression)
+- 손실압축
+- OpenGL 3.2 이상 혹은 OpenGL ES 3.1 + AEP(Android Extension Pack)
+- iOS는 A8 processor를 사용하기 시작하는 기종부터 사용이 가능합니다. iPhone 6, iPad mini 4가 이에 해당합니다.
+- 출처: https://ozlael.tistory.com/84?category=612211 [오즈라엘]
+
+
+
+[좌표계]: res/coordinate_systems.png
