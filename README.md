@@ -282,12 +282,30 @@ out.texcoord.xy = TRANSFORM_TEX(in.texcoord, _MainTex);
 ## 10. Gradient Pattern
 
 ``` ref
-              +-----1,1
-              |      |
-OpenGL/Unity 0,0-----+
-Direct X     0,0-----+
-              |      |
-              +-----1,1
+Direct X
+
+(0,0)        (1,0)
+  +-----+-----+
+  |     |     |
+  |     |     |
+  +-----+-----+
+  |     |     |
+  |     |     |
+  +-----+-----+
+(0,1)        (1,1)
+
+
+OpenGL / UnityEngine
+
+(0,1)        (1,1)
+  +-----+-----+
+  |     |     |
+  |     |     |
+  +-----+-----+
+  |     |     |
+  |     |     |
+  +-----+-----+
+(0,0)        (1,0)
 ```
 
 Quad, Plane의 UV맵핑이 다르다. Quad는 좌하단. Plane은 우하단
@@ -336,6 +354,7 @@ float drawCircle(float2 uv, float2 cp, float r)
 ## 15. Smoothstep
 
 - [smoonthstep](https://developer.download.nvidia.com/cg/smoothstep.html)
+- <https://thebookofshaders.com/glossary/?search=smoothstep>
 
 ``` ref
 +----------+----------+----------+----------+
@@ -586,6 +605,10 @@ world-space binormal = cross(world-space normal, world-space tangent)
     - normal은 표면에 수직이기에, 기울어져 shifting이 발생(틀린 라이트닝 발생.)
     - tangent는 표면가 밀착되었기에, 문제없음.
     - Even with the inverse-transpose transformation, normal vectors may lose their unit length; thus, they may need to be renormalized after the transformation.
+
+![1](res/DeriveInvTrans_1.svg)
+![2](res/FactorOutTranspose_2.svg)
+![3](res/FactorOutInverse_3.svg)
 
 ![figure10.8](./res/figure10_8.jpg)
 
