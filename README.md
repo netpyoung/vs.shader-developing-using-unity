@@ -9,11 +9,11 @@
 ## 01. What is Shader
 
 ``` ref
-    쉐이더란 화면에 출력할 픽셀의 위치와 색상을 계산하는 함수
-    쉐이더(shader)란 '색의 농담, 색조, 명암 효과를 주다.'라는 뜻을 가진 shade란 동사와 행동의 주체를 나타내는 접미사 '-er'을 혼합한 단어입니다.
-    즉, 색의 농담, 색조, 명암 등의 효과를 주는 주체가 쉐이더란 뜻
+쉐이더란 화면에 출력할 픽셀의 위치와 색상을 계산하는 함수
+쉐이더(shader)란 '색의 농담, 색조, 명암 효과를 주다.'라는 뜻을 가진 shade란 동사와 행동의 주체를 나타내는 접미사 '-er'을 혼합한 단어입니다.
+즉, 색의 농담, 색조, 명암 등의 효과를 주는 주체가 쉐이더란 뜻
 
-    - https://kblog.popekim.com/2011/11/01-part-1.html
+- https://kblog.popekim.com/2011/11/01-part-1.html
 ```
 
 |     | 코어갯수 | 연산                 |
@@ -22,10 +22,10 @@
 | GPU | 수천개  | parallel operation |
 
 ``` ref
-    강력한 마이크로 프로세서를 몇개 또는 큰 파이프를 쓰는 대신,
-    매우 작은 마이크로 프로세서들을 한번에 돌리는 것이다. 그것이 바로 GPU(Graphic Processor Unit).
+강력한 마이크로 프로세서를 몇개 또는 큰 파이프를 쓰는 대신,
+매우 작은 마이크로 프로세서들을 한번에 돌리는 것이다. 그것이 바로 GPU(Graphic Processor Unit).
 
-    - https://thebookofshaders.com/01/?lan=kr
+- https://thebookofshaders.com/01/?lan=kr
 ```
 
 | 쉐이더                 | 기능                                |
@@ -37,12 +37,6 @@
 | Tessellation / Hull | OpenGL 4, DirectX3D 11, Metal     |
 
 ## 02. Working of a Shader
-
-### 좌표계
-
-- ref: <https://learnopengl.com/Getting-started/Coordinate-Systems>
-
-![좌표계]
 
 ### 파이프라인
 
@@ -186,12 +180,6 @@ Shader "ShaderName"
 ## 06. Depth Sorting / Z-Sorting
 
 - Z-Sorting -> Render Queue -> Painter's algorithm(카메라와 거리 기반)
-- Sorting (Depth Sorting / Z-Sorting)
-
-    ``` ref
-    ZWrite On  ;; override render Queue (forcing z-order)
-    ZWrite Off
-    ```
 
 - Render Queue
 
@@ -212,68 +200,106 @@ Shader "ShaderName"
 | 0    | Rendered First | back  |
 | 5000 | Rendered Last  | Front |
 
------------------------------------------------
-
 ## 07. Sub Shader Tags
 
-Tags는 `,`로 구분하지 않는다.(공백으로 구분.)
+- Tags는 `,`로 구분하지 않는다.(공백으로 구분.)
 
-### Queue
+    ``` shader
+    Tags { ___ = ___   ___ = ___ }
+    ```
 
-### IgnoreProjection
+### TODO: IgnoreProjector
 
-"IgnoreProjection" = "True"
-"IgnoreProjection" = "False"
+"IgnoreProjector" = "True"
+"IgnoreProjector" = "False"
 
 ### RenderType
 
-보통 RenderType는 Queue와 같다.
-"Queue" = "Transparent"
-"RenderType" = "Transparent"
+- 쉐이더 변경시 쓰이는 키 지정.
+- <https://docs.unity3d.com/Manual/SL-ShaderReplacement.html>
+- [Camera.RenderWithShader](https://docs.unity3d.com/ScriptReference/Camera.RenderWithShader.html)
+- [Camera.SetReplacementShader](https://docs.unity3d.com/ScriptReference/Camera.SetReplacementShader.html)
+- 일반적으로 RenderType는 Queue의 이름과 동일하게 설정
 
-Camera.main.SetReplacement("X-rayShader", "Opaque")
+    ``` shader
+    "Queue" = "Transparent"
+    "RenderType" = "Transparent"
+    ```
+
+    ``` csharp
+    // Opaque를 "X-rayShader"로 바꾸어라.
+    Camera.main.SetReplacement("X-rayShader", "Opaque")
+    ```
 
 ## 08. Blending
 
-Z-test => Pixel Shader => (Blending)
-블랜딩 하는 경우는 보통, 투명 / 반투명한 픽셀이 다른 픽셀 앞에 올때.
-
+``` ref
 Blend(srcFactor, blendOp, dstFactor)
-srcFactor: 작업 대상
-dstFactor: 컬러버퍼에 있는 값들
-blendOp: +(default), min, max
+
+srcFactor: 작업 대상 [0 ~ 1]
+dstFactor: 컬러버퍼에 있는 값들 [0 ~ 1]
+blendOp: Add(default), Sub, RevSub, Min, Max ...
+
+Merged Pixel = blendOp((srcColor * srcFactor), (dstColor * dstFactor))
+```
+
+![unity_blend.png](res/unity_blend.png)
+
+![blending1](res/blending1.jpg)
+
+![blending2](res/blending1.jpg)
 
 ## 09. Texture Mapping
 
-    Direct X     +-----+
-                 |     |
-    opengl/unity +-----+
-
 ``` shader
+// Texture 속성
+// Wrap Mode - Clamp / Repeat
+
 Properties
 {
     _MainTex("Main Texture", "2D") = "white" {}
 }
 
+uniform sampler2D _MainTex;
+uniform float4 _MainTex_ST;
+
 float4 texcoord : TEXCOORD0;
 
-Tiling x, y
-Offset z, w
+texcoord.xy; // Tiling
+texcoord.zw; // Offset
 
-Texture 속성
-Wrap Mode - Clamp / Repeat
+float4 color = tex2D(_MainTex, texcoord);
+
+
+// UnityCG.cginc
+// Transforms 2D UV by scale/bias property
+#define TRANSFORM_TEX(tex,name) (tex.xy * name##_ST.xy + name##_ST.zw)
+
+out.texcoord.xy = in.texcoord.xy * _MainTex_ST.xy + _MainTex_ST.zw;
+out.texcoord.xy = TRANSFORM_TEX(in.texcoord, _MainTex);
 ```
 
 ## 10. Gradient Pattern
-Quad, Plane의 UV맵핑이 다르다.
-Quad는 좌하단.
-Plane은 우하단
 
-Mac : Grapher
-Other: https://www.desmos.com/calculator
+``` ref
+              +-----1,1
+              |      |
+OpenGL/Unity 0,0-----+
+Direct X     0,0-----+
+              |      |
+              +-----1,1
+```
+
+Quad, Plane의 UV맵핑이 다르다. Quad는 좌하단. Plane은 우하단
+
+### 그래프생성 유틸
+
+- Mac: [Grapher](https://www.goldensoftware.com/products/grapher)
+- Online: <https://www.desmos.com/calculator>
 
 ## 11. Wave Functions
-sqrt / sin / cos / tan
+
+- sqrt / sin / cos / tan 그래프
 
 ## 12. Line Pattern
 
@@ -284,48 +310,45 @@ float drawLine(float2 uv, float start, float end)
     {
         return 1;
     }
-
     return 0;
 }
 ```
 
-----------------------------------------
+## 13. Union and Intersection
 
-# 13. Union and Intersection
-#minor #pass
+skip
 
+## 14. Circle Pattern
 
-
-# 14. Circle Pattern
-~~~ shader
-float drawCircle(float2 uv, float2 center, float radius)
+``` shader
+float drawCircle(float2 uv, float2 cp, float r)
 {
-    float circle = pow((uv.y - center.y), 2) + pow((uv.x - center.x), 2);
-    float sqrtRadius = pow(radious, 2);
-    if (circle < sqrtRadius)
+    float x2y2 = pow((uv.x - cp.x), 2) + pow((uv.y - cp.y), 2);
+    float r2 = pow(r, 2);
+    if (x2y2 > r2)
     {
-        return 1;
+        return 0;
     }
-    return 0;
+    return 1;
 }
-~~~
+```
 
-
-
-# 15. Smoothstep
+## 15. Smoothstep
 
 - [smoonthstep](https://developer.download.nvidia.com/cg/smoothstep.html)
 
-~~~
+``` ref
 +----------+----------+----------+----------+
 1(from)    0.75       0.5(to)    0.25       0
+```
 
+``` shader
 float smoothstep(float a, float b, float x)
 {
     float t = saturate((x - a)/(b - a));
-    return t*t*(3.0 - (2.0*t));
+    return t * t * (3.0 - (2.0 * t));
 }
-~~~
+```
 
 | from | to  |            |        |
 | ---- | --- | ---------- | ------ |
@@ -336,37 +359,72 @@ float smoothstep(float a, float b, float x)
 | 1    | 0.5 | 0.75       | 0.5    |
 | 1    | 0.5 | 1          | 0      |
 
+## 16. Circle Fading Edges
 
+``` shader
+float drawCircleFade(float2 uv, float2 cp, float r, float feather)
+{
+    float x2y2 = pow((uv.x - cp.x), 2) + pow((uv.y - cp.y), 2);
+    float r2 = pow(r, 2);
+    if (x2y2 > r2)
+    {
+        return 0;
+    }
+    return smoothstep(r2, r2 - feather, x2y2);
+}
+```
 
-# 16. Circle Fading Edges
-#TODO
+## 17. Pattern Animation
 
+sin / cos 함수와 _Time변수를 이용한 에니에미션.
 
+| Name            | Type   | Value                                                                                |
+| --------------- | ------ | ------------------------------------------------------------------------------------ |
+| _Time           | float4 | Time since level load (t/20, t, t*2, t*3), use to animate things inside the shaders. |
+| _SinTime        | float4 | Sine of time: (t/8, t/4, t/2, t).                                                    |
+| _CosTime        | float4 | Cosine of time: (t/8, t/4, t/2, t).                                                  |
+| unity_DeltaTime | float4 | Delta time: (dt, 1/dt, smoothDt, 1/smoothDt).                                        |
 
-# 17. Pattern Animation
-sin / abs
+## 18. Vertex Animation
 
+- 깃발의 vertex position을 sin으로 흔들고 중심점 위치 보정.
 
+``` shader
+float4 vertexFlagAnim(float4 p, float2 uv)
+{
+    p.z = p.z + sin((uv.x - (_Time.y * _Speed)) * _Frequency) * (uv.x *_Amplitude);
+    return p;
+}
+```
 
-# 18. Vertex Animation
-- 깃발을 sin으로 흔들고 `* (uv.x * amplitude)`로 위치 보정.
+## 19. Normals
 
-
-# 19. Normals
-- face normal
 - vertex normal
+- face normal
 
+구하고자 하는 vertex를 포함하고 있는 face normal을 모두 구하고 normalize를 하면 vertex normal을 얻을 수 있다.
 
+## 20. Normal-Vertex Animation
 
-# 20. Normal-Vertex Animation
-부풀리기 축소하기
+``` shader
+float4 vertexAnimNormal(float4 p, float4 normal)
+{
+    p.z += sin((normal - (_Time.y * _Speed)) * _Frequency) * (normal *_Amplitude);
+    return p;
+}
+```
 
+----------------------------------------------------------------
 
+## 21. Rendering Pipeline - part 1
 
-# 21. Rendering Pipeline - part 1
-# 22. Rendering Pipeline - part 2
+skip
+
+## 22. Rendering Pipeline - part 2
+
 - **TODO 이거 다시 쌈박하게 정리해야함.**
-~~~
+
+``` ref
 RenderState
 - Vertex shader
 - Pixel shader
@@ -381,26 +439,30 @@ Saved by batching - A다음에 오는 B, C를 그릴 동안 RenderState변화가
 
 Batches : 1     Saved by batching : 2
 DrawCall - 3
-~~~
+```
 
+## 23. Normal Maps _ Types
 
-# 23. Normal Maps _ Types
 - ref: http://wiki.polycount.com/wiki/Normal_Map_Technical_Details
 - 우리가 맨날 보는 퍼런맵은 Tangent-Space Normal Map임.
 - 근데 왜 쓰는지 좀 알아보자.
 
-## World-Space Normal Map
+### World-Space Normal Map
+
 UP = blue
+
 - does not require additional per-pixel transforms, so it works faster.
 - won’t work right if your object changes shape (character animations)
 - World-space is basically the same as object-space, except it requires the model to remain in its original orientation, neither rotating nor deforming, so it’s almost never used.
 
-## Object-Space Normal Map
+### Object-Space Normal Map
+
 - forward/backward face기반(+z, -z).
 - Normal의 xyz를 rgb로 Texture에 저장.
 - 따라서 x, y, z가 0~1사이의 모든 방향으로 적절하게 분배되어 알록달록하게 보임.
 
-## Tangent-Space Normal Map
+### Tangent-Space Normal Map
+
 - forward face기반.
 Tangent Vector는 Normal Vector와 수직인 벡터이다(여러개...)
 따라서 통상적으로 UV 좌표와 비교하여
@@ -412,6 +474,7 @@ TBN-matrix
 TBN = | Tx Ty Tz |
       | Bx By Bz |
       | Nx Ny Nz |
+
 - 노멀맵이 적용된 물체의 표면을 기준으로 Normal Vector값을 연산하여 저장한 이미지이다.
 - 물체는 보통 표면의 바깥(z)으로 튀어 나오므로 주로 파랗게 보임.
 Predominantly-blue colors. Object can rotate and deform. Good for deforming meshes, like characters, animals, flags, etc.
@@ -432,8 +495,6 @@ Predominantly-blue colors. Object can rotate and deform. Good for deforming mesh
 | Unity    | X+  | Y+    | Z+   |
 | 3ds Max  | X+  | Y-    | Z+   |
 | Unreal   | X+  | Y-    | Z+   |
-
-
 
 ## 24 - Points and Vectors
 #pass
@@ -539,6 +600,7 @@ world-space binormal = cross(world-space normal, world-space tangent)
 
 
 ## 27. DXT-Compression
+
 - 손실압축.
 - https://en.wikipedia.org/wiki/S3_Texture_Compression
 - https://www.fsdeveloper.com/wiki/index.php?title=DXT_compression_explained
@@ -643,6 +705,11 @@ world-space binormal = cross(world-space normal, world-space tangent)
     uniform sampler2D _MainTex;
     uniform float4 _MainTex_ST;
 
+tangent.w
+- https://forum.unity.com/threads/what-is-tangent-w-how-to-know-whether-its-1-or-1-tangent-w-vs-unity_worldtransformparams-w.468395/
+
+The tangent is the U of the UV, which for both OpenGL and DirectX is left to right (0.0 on the left, 1.0 on the right). The binormal is the V of the UV, which is different in OpenGL and DirectX. OpenGL is bottom to top, and DirectX is top to bottom. This is also where the difference in many engine's and 3d tools' preference for "+Y / -Y" normal maps comes from.
+
 
 * `UV`, `ST` 도대체 뭐야.
     - 3d 좌표계에서 xyzw 취함. uv남음. st남음.
@@ -736,7 +803,6 @@ ST - surface's coordinate space.
 
 - https://docs.unity3d.com/kr/current/Manual/SL-Blend.html
 
-![unity_blend.png](./res/unity_blend.png)
 
 
     Zwrite off << 이거 어렵네..
@@ -931,19 +997,50 @@ directional light에는 forward base로 point light에는 forward add로 두가�
     - 씬에 하나 이상의 라이트가 있다면, 하나의 가장 밝은 directional light가 Base Pass에 사용.
     - 다른 라이트들은 Spherical Harmonics로 간주.
 
+![](res/Row_and_column_major_order.svg)
+
 ~~~
-mul(unity_ObjectToWorld, v.tangent) = float4
-| 1 2 3 4 | | 1 |   | 30 |
-| 4 3 2 1 | | 2 | = | 20 |
-| 1 2 3 4 | | 3 |   | 30 |
-| 4 3 2 1 | | 4 |   | 20 |
 
-mul(v.tangent, unity_ObjectToWorld) = float4
+N x 1 matrix : column vector
+1 x N matrix : row vector
 
-            | 1 2 3 4 |
-| 1 2 3 4 | | 4 3 2 1 | = | 28 26 24 22 |
-            | 1 2 3 4 |
-            | 4 3 2 1 |
+그러나 D3DX 는 row-major 행렬을 사용하고 OpenGL은 column-major
+
+https://docs.microsoft.com/en-us/windows/win32/dxmath/pg-xnamath-getting-started?redirectedfrom=MSDN#matrix_convention
+Direct3D has historically used left-handed coordinate system, row-major matrices, row vectors
+
+HLSL shaders default to consuming column-major matrices
+
+
+https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-per-component-math
+Matrix packing order for uniform parameters is set to column-major by default
+ #pragmapack_matrix directive, or with the row_major or the column_major keyword.
+
+
+
+Row-Major
+mul(v, TranslateMatrix) = float4
+            | 1 0 0 0 |
+| 1 2 3 1 | | 0 1 0 0 | = | (1 + 5) 2 3 1 |
+            | 0 0 1 0 |
+            | 5 0 0 1 |
+
+
+Colum-Major
+mul(v, TranslateMatrix) = float4
+
+            | 1 0 0 5 |
+| 1 2 3 1 | | 0 1 0 0 | = | 1 2 3 (5 + 1) |
+            | 0 0 1 0 |
+            | 0 0 0 1 |
+
+mul(TranslateMatrix, v) = float4
+
+| 1 0 0 5 | | 1 |   | 1 + 5 |
+| 0 1 0 0 | | 2 | = | 2     |
+| 0 0 1 0 | | 3 |   | 3     |
+| 0 0 0 1 | | 1 |   | 1     |
+
 
 동일한 float4이라도 순서에 따라 값이 다르다.
 
@@ -1144,6 +1241,14 @@ BRDF - ex) 뷰 방향과 라이트 방향으로부터, 불투명한 표면에 �
 - iOS는 A8 processor를 사용하기 시작하는 기종부터 사용이 가능합니다. iPhone 6, iPad mini 4가 이에 해당합니다.
 - 출처: https://ozlael.tistory.com/84?category=612211 [오즈라엘]
 
+
+
+    ``` ref
+    ZWrite On  ;; 기본값 On, override render Queue (forcing z-order)
+    ZWrite Off
+    ```
+
+https://www.slideshare.net/jpcorp/5-10351002
 
 
 [좌표계]: res/coordinate_systems.png
