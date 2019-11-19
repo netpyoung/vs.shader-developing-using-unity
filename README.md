@@ -142,8 +142,8 @@ Shader "ShaderName"
 ![MVP](res/opengl/MVP.png)
 ![model_to_world_to_camera](res/opengl/model_to_world_to_camera.png)
 ![model_to_world_to_camera_to_homogeneous](res/opengl/model_to_world_to_camera_to_homogeneous.png)
-![좌표계]
 
+![좌표계]
 
 |                   |      |                          |
 | ----------------- | ---- | ------------------------ |
@@ -437,7 +437,9 @@ float4 vertexAnimNormal(float4 p, float4 normal)
 
 ## 21. Rendering Pipeline - part 1
 
-skip
+TODO
+
+![rendering_pipeline](res/rendering_pipeline.jpg)
 
 ## 22. Rendering Pipeline - part 2
 
@@ -462,7 +464,7 @@ DrawCall - 3
 
 ## 23. Normal Maps _ Types
 
-- ref: http://wiki.polycount.com/wiki/Normal_Map_Technical_Details
+- <http://wiki.polycount.com/wiki/Normal_Map_Technical_Details>
 - 우리가 맨날 보는 퍼런맵은 Tangent-Space Normal Map임.
 - 근데 왜 쓰는지 좀 알아보자.
 
@@ -502,8 +504,6 @@ Predominantly-blue colors. Object can rotate and deform. Good for deforming mesh
 - Easier to use image compression.
 - Slightly slower performance than an object-space map (but not by much).
 
-
-
 - Right handedness, which coincides with OpenGL is indicated with a plus sign (ex. +Y)
 - Left handedness, which coincides with DirectX, is indicated with a negative sign (ex. -Y)
 
@@ -516,32 +516,31 @@ Predominantly-blue colors. Object can rotate and deform. Good for deforming mesh
 | Unreal   | X+  | Y-    | Z+   |
 
 ## 24 - Points and Vectors
-#pass
 
-
+skip
 
 ## 25. Vector Multiplication
 
 이거 이름 햇갈리기 쉬움.
 
 | Dot Product   | Inner Product | 내적 |
+
 - 닷은 점이니까 모이는건 내적
 - 점이니까 두개 모아서 하나가 됨.
 - 하나로 모이니 두 벡터 사이의 각도를 구할 수 있음.
 - 각도니까 cos연산 들어감.
-- https://rfriend.tistory.com/145
-
-
+- <https://rfriend.tistory.com/145>
 
 | Cross Product | Outer Product | 외적 |
+
 - 크로스는 삐죽하니까 외적으로 외울껏.
 - X 니까 삐저나옴.
 - X가 직각이니 수직 구할때 씀.
-- https://rfriend.tistory.com/146
+- <https://rfriend.tistory.com/146>
 
 교환법칙 성립안함
 
-~~~
+``` ref
 손가락 맨날 햇갈림 이케 외우자.
 X : 엄지(엄지는 항상 오른쪽방향으로)
 Y : 검지(검지는 항상 위쪽)
@@ -554,6 +553,7 @@ X x Z = Y : 오른손 좌표계 - OpenGL(since 1992) '오'픈 지엘이니(or �
 |
 |
 Y
+
   Y
   |
   |
@@ -563,17 +563,18 @@ Y
 Z
 
 X x Z = Y : 왼손 좌표계 - DirectX(since 1995) 나중에 나왔으니 왼쪽.
+
 Y
 | /Z
 |/
 +---- X
-~~~
-
+```
 
 ## 26. Normal Map Shader - intro
+
 TBN : (Tangent Binormal Normal)
 
-~~~
+``` ref
 (Object-space)TBN-matrix * (Tangent-space)Normal = (Object-space)Normal
 (World-space)TBN-matrix * (Tangent-space)Normal = (World-space)Normal
 
@@ -586,10 +587,11 @@ TBN : (Tangent Binormal Normal)
 (Tangent-space) Normal
 * (World-space)TBN-matrix
 = (World-space) Normal
-~~~
+```
 
 (World-space) TBN-matrix
-~~~
+
+``` ref
 v.normal
 v.tangent
 binormal = cross(normal, tangent)
@@ -597,14 +599,14 @@ binormal = cross(normal, tangent)
 world-space normal = object-space normal * unity_WorldToObject
 world-space tangent = object-space tangent * unity_ObjectToWorld
 world-space binormal = cross(world-space normal, world-space tangent)
-~~~
+```
 
-* 둘다 ObjectToWorld는 ? scale (1, 1, 1) =>  (2, 2, 2) 처럼 균등이면 문제가 없다. 하지만, 메쉬가 기울어져있으면,
-    - https://forum.unity.com/threads/world-space-normal.58810/
-    - https://stackoverflow.com/questions/13654401/why-transforming-normals-with-the-transpose-of-the-inverse-of-the-modelview-matr
-    - normal은 표면에 수직이기에, 기울어져 shifting이 발생(틀린 라이트닝 발생.)
-    - tangent는 표면가 밀착되었기에, 문제없음.
-    - Even with the inverse-transpose transformation, normal vectors may lose their unit length; thus, they may need to be renormalized after the transformation.
+- 둘다 ObjectToWorld는 ? scale (1, 1, 1) =>  (2, 2, 2) 처럼 균등이면 문제가 없다. 하지만, 메쉬가 기울어져있으면,
+  - <https://forum.unity.com/threads/world-space-normal.58810/>
+  - <https://stackoverflow.com/questions/13654401/why-transforming-normals-with-the-transpose-of-the-inverse-of-the-modelview-matr>
+  - normal은 표면에 수직이기에, 기울어져 shifting이 발생(틀린 라이트닝 발생.)
+  - tangent는 표면가 밀착되었기에, 문제없음.
+  - Even with the inverse-transpose transformation, normal vectors may lose their unit length; thus, they may need to be renormalized after the transformation.
 
 ![1](res/DeriveInvTrans_1.svg)
 ![2](res/FactorOutTranspose_2.svg)
@@ -612,28 +614,28 @@ world-space binormal = cross(world-space normal, world-space tangent)
 
 ![figure10.8](./res/figure10_8.jpg)
 
+``` ref
     world-space normal = object-space normal * unity_ObjectToWorld
     world-space tangent = object-space tangent * unity_ObjectToWorld
     world-space binormal = cross(world-space normal, world-space tangent)
+```
 
 - 유니티의 rgb 입력 범위는 [0 ~ 1]
 - 유니티의 노멀의 범위는 [-1 ~ 1]
 - n따라서 rgb에서 노멀의 구할려면 범위를 2배로 늘리고, -1만큼 이동시켜줘야함.
 - (color channel * 2) - 1
 
-
 ## 27. DXT-Compression
 
 - 손실압축.
-- https://en.wikipedia.org/wiki/S3_Texture_Compression
-- https://www.fsdeveloper.com/wiki/index.php?title=DXT_compression_explained
+- [S3 Texture Compression](https://en.wikipedia.org/wiki/S3_Texture_Compression)
+- [DXT Compression](https://www.fsdeveloper.com/wiki/index.php?title=DXT_compression_explained)
 - 4x4 픽셀 중에, 색 2개를 고름. 2개의 색을 interpolation시켜서 4x4 color 인덱스를 만듬.
 
- - 노멀맵 같은 경우에는 red채널의 변화가 심하기 때문에, R채널을 A채널로 바꾸고 DXT5로 저장한 후 shader에서 AGB로 접근하여 샘플링하면 상당히 괜찮은 결과를 얻어낼 수 있습니다.
-    - https://gpgstudy.com/forum/viewtopic.php?t=24598
+  - 노멀맵 같은 경우에는 red채널의 변화가 심하기 때문에, R채널을 A채널로 바꾸고 DXT5로 저장한 후 shader에서 AGB로 접근하여 샘플링하면 상당히 괜찮은 결과를 얻어낼 수 있습니다.
+    - <https://gpgstudy.com/forum/viewtopic.php?t=24598>
 
-
-- DXT1 포맷을 이용.
+### DXT1 포맷을 이용
 
 | V   | color | channel | bit |
 | --- | ----- | ------- | --- |
@@ -641,7 +643,7 @@ world-space binormal = cross(world-space normal, world-space tangent)
 | Y   | G     | color1  | 16  |
 | Z   | B     | x       | 0   |
 
-- DXT5nm 포맷을 이용(퀄리티 업.)
+### DXT5nm 포맷을 이용(퀄리티 업)
 
 | V   | color | channel       | bit |
 | --- | ----- | ------------- | --- |
@@ -655,59 +657,62 @@ world-space binormal = cross(world-space normal, world-space tangent)
 - `normal.xy = packednormal.wy * 2 - 1;` (0 ~ 1 => -1 ~ 1)
 - `Z`는 쉐이더에서 계산. 단위 벡터의 크기는 1인것을 이용.(sqrt(x^2 + y^2 + z^2) = 1)
 
+### DXT1, (RGB 5:6:5), (RGBA 5:5:5:1)
 
+|               |                  |
+| ------------- | ---------------- |
+| color0        | 16               |
+| color1        | 16               |
+| color indices | `4 * 4 * 2 = 32` |
 
-## DXT1, (RGB 5:6:5), (RGBA 5:5:5:1)
-|               |                |
-| ------------- | -------------- |
-| color0        | 16             |
-| color1        | 16             |
-| color indices | 4 * 4 * 2 = 32 |
-
+``` ref
     (RGB)24 * 16 = 384
     384 / 64 = 6
     6배를 아낄 수 있다.
+```
 
-## DXT3
+### DXT3
 
-|               |                |
-| ------------- | -------------- |
-| alpha         | 64             |
-| color0        | 16             |
-| color1        | 16             |
-| color indices | 4 * 4 * 2 = 32 |
+|               |                  |
+| ------------- | ---------------- |
+| alpha         | 64               |
+| color0        | 16               |
+| color1        | 16               |
+| color indices | `4 * 4 * 2 = 32` |
 
-
+``` ref
     (RGBA)32 * 16 = 512
     512 / 128 = 4
     4배를 아낄 수 있다.
+```
 
 ## DXT5
 
-|               |                |
-| ------------- | -------------- |
-| a0            | 8              |
-| a1            | 8              |
-| alpha indices | 48             |
-| color0        | 16             |
-| color1        | 16             |
-| color indices | 4 * 4 * 2 = 32 |
+|               |                  |
+| ------------- | ---------------- |
+| a0            | 8                |
+| a1            | 8                |
+| alpha indices | 48               |
+| color0        | 16               |
+| color1        | 16               |
+| color indices | `4 * 4 * 2 = 32` |
 
+``` ref
     R4G4B4A4
     R4G4B4A4 (출력시 보간 A8)
+```
 
-- DXT5nm : https://github.com/castano/nvidia-texture-tools/wiki/NormalMapCompression
-- normalmap compression : https://mgun.tistory.com/1892
-- Texture types : http://wiki.polycount.com/wiki/Texture_types
-- https://www.nvidia.com/object/real-time-normal-map-dxt-compression.html
-- bc5 : https://docs.microsoft.com/en-us/windows/desktop/direct3d10/d3d10-graphics-programming-guide-resources-block-compression#bc5
+- [DXT5nm](https://github.com/castano/nvidia-texture-tools/wiki/NormalMapCompression)
+- [Normalmap compression](https://mgun.tistory.com/1892)
+- [Texture types](http://wiki.polycount.com/wiki/Texture_types)
+- <https://www.nvidia.com/object/real-time-normal-map-dxt-compression.html>
+- [bc5](https://docs.microsoft.com/en-us/windows/desktop/direct3d10/d3d10-graphics-programming-guide-resources-block-compression#bc5)
 
+### (Tangent-space) normal map to (World-space) normal
 
+#### tangent to dxt
 
-## (Tangent-space) normal map to (World-space) normal
-
-### tangent to dxt
-
+``` ref
     (Object-space) tangent * model matrix(_Object2World) = (World-space) tangent
     t.x =R=> 0 ~ 1 = `(r * 2) - 1` => -1 ~ 1
     t.y =G=>
@@ -715,11 +720,15 @@ world-space binormal = cross(world-space normal, world-space tangent)
 
     R => dxt.alpha
     G => dxt.color0, 1
+```
 
+## 28. Normal Map Shader - part 1
 
-# 28. Normal Map Shader - part 1
-# 29. Normal Map Shader - part 2
+skip
 
+## 29. Normal Map Shader - part 2
+
+``` ref
     o.normalWorld = normalize(mul(v.normal, unity_WorldToObject));
     o.tangentWorld = normalize(mul(v.tangent, unity_ObjectToWorld));
     o.binormalWorld = normalize(cross(o.normalWorld, o.tangentWorld) * v.tangent.w);
@@ -727,6 +736,7 @@ world-space binormal = cross(world-space normal, world-space tangent)
 
     uniform sampler2D _MainTex;
     uniform float4 _MainTex_ST;
+```
 
 tangent.w
 - https://forum.unity.com/threads/what-is-tangent-w-how-to-know-whether-its-1-or-1-tangent-w-vs-unity_worldtransformparams-w.468395/
@@ -740,7 +750,7 @@ The tangent is the U of the UV, which for both OpenGL and DirectX is left to rig
     - st - 텍셀(texel = Texture + pixel) 좌표계
 
 
-~~~
+``` ref
 UV - texture's coordinate
        +----+ (1, 1)
        |    |
@@ -752,12 +762,13 @@ ST - surface's coordinate space.
 (0, 0) +----+
 
     o.texcoord.xy = (v.texcoord.xy * _MainTex_ST.xy + _MainTex_ST.zw)
+```
 
 |     |        |
 | --- | ------ |
 | xy  | tiling |
 | zw  | offset |
-~~~
+
 
 * 나중에 확인해볼껏 (http://egloos.zum.com/chulin28ho/v/5339578)
 
@@ -1009,10 +1020,20 @@ directional light에는 forward base로 point light에는 forward add로 두가�
     - Support Shader Model 3 or later
     - Support for Depth-Render Texture
 
-# 38. Diffuse Reflection - intro
-# 39. Diffuse Reflection - code 1
-# 40. Diffuse Reflection - code 2
-# 41. Diffuse Reflection - code 3
+## 38. Diffuse Reflection - intro
+
+skip
+
+## 39. Diffuse Reflection - code 1
+
+skip
+
+## 40. Diffuse Reflection - code 2
+
+skip
+
+## 41. Diffuse Reflection - code 3
+
 - lambert cosine law
     - light in reflected off a surface based on cosine-fall off.
 
@@ -1104,6 +1125,7 @@ Blinn-Phong Reflection Model : max(0, (N.H))^S
     - https://docs.microsoft.com/en-us/windows/desktop/direct3dhlsl/dx-graphics-hlsl-tex2dlod
     - https://docs.unity3d.com/Manual/SL-PlatformDifferences.html
     - https://docs.unity3d.com/Manual/SL-ShaderCompileTargets.html
+
 ``` cg
 // tex2D - pixel shader only
 // float4 specularMap = tex2D(_SpecularMap, o.texcoord.xy);
@@ -1121,8 +1143,8 @@ float4 specularMap = tex2Dlod(_SpecularMap, o.texcoord);
 * pragma
     - https://docs.unity3d.com/Manual/SL-ShaderCompileTargets.html
     - `#pragma target 2.5 (default)`
-`
-# 45. Ambient Reflection - intro
+
+## 45. Ambient Reflection - intro
 
 |                          |        |                                                                               |
 | ------------------------ | ------ | ----------------------------------------------------------------------------- |
@@ -1131,57 +1153,61 @@ float4 specularMap = tex2Dlod(_SpecularMap, o.texcoord);
 | unity_AmbientGround      | fixed4 | Ground ambient lighting color in gradient ambient lighting case.              |
 | UNITY_LIGHTMODEL_AMBIENT | fixed4 | Ambient lighting color (sky color in gradient ambient case). Legacy variable. |
 
-# 48_Advanced Lighting Model
+## 48_Advanced Lighting Model
+
 - Shadow
 - Inter Object interaction
 - Energy Balance
-    - Energy balanced shading model
+  - Energy balanced shading model
 
+## 49_Hemispherical Lighting Model
 
-# 49_Hemispherical Lighting Model
 - 오브젝트는 구의 센터에  빛의 방향이 구의 바깥에서 안쪽으로 비춘다 가정.
 - Hemispherical Lighting Model
-    - 2 half sphere
+  - 2 half sphere
 
 |       |        |          |
 | ----- | ------ | -------- |
 | upper | sky    | N.L > 0  |
 | lower | ground | N.L <= 0 |
 
+## 50_Image Based Lighting
 
-# 50_Image Based Lighting
 - 많은 라이트를 실시간 계산하기에는 무리
-
 - light정보를 텍스쳐에 저장
 - light probe로부터 환경맵(sphere, cube)을 제작
 - 환경 맵으로부터 light계산
 
-## light정보를 텍스쳐에 저장하는 기법에는 여러가지 테크닉이 있음.
+light정보를 텍스쳐에 저장하는 기법에는 여러가지 테크닉이 있음.
+
 ### Chrome ball
+
 - 눈에 가급적 많은 구역을 담을 수 있도록 카메라를 멀리 배치
 - 맵에 크롬볼(chrome ball)을 배치(눈에 보이는 방향으로부터 모든 라이트 정보를 저장) - 이러한 크롬볼을 light probe라 함.
+
 ### Fish eye lens
+
 - 185도까지 캡쳐 가능한 렌즈가 있음.
 - 2개로 묶어 360도를 캡쳐. 환경맵을 만듬.
 
+## 51_Irradiance Environment Map
 
-# 51_Irradiance Environment Map
 - Irradiance - 방사 조도(무엇에서 나오는 빛의 양을 나타내는 단위)
 - 기존 환경맵 특정 노멀, 특정 빛의 방향을 저장함 => 오브젝트를 회전하거나 이동시킬 수 없음.
 
 - 맵에 빛을 반사시킬 구를 가져다 놓고, 모든 빛에 대해 반사된 값을 Irradiance Environment Map에 저장.
-    - 미리 diffuse를 계산하여 Irradiance 환경맵에 저장.
+  - 미리 diffuse를 계산하여 Irradiance 환경맵에 저장.
 - 렌더링할때에는, 어떠한 물체의 노말값을, 환경맵을 구었을 때의 구의 노말값이라고 가정하고, 미리 구어둔 맵의 값을 가져옴.
-    - 그때 쓰는 함수가 texCube임.
-    -  `color = texCube(Irradiance-Environment-Map, normal)`
+  - 그때 쓰는 함수가 texCube임.
+  - `color = texCube(Irradiance-Environment-Map, normal)`
 - 단점은, 거리정보가 없기에, 빛의 거리정보가 없기에 따른 감쇠를 표현할 수 없음.
 
+### Irradiance map
 
-## Irradiance map
 - Irradiance map
-    - 6면체
-    - 각 면마다 4개의 텍셀을 지님
-    - 중심에서 텍셀까지의 방향(노말방향)을 구함
+  - 6면체
+  - 각 면마다 4개의 텍셀을 지님
+  - 중심에서 텍셀까지의 방향(노말방향)을 구함
 - Lighting Environment map
 
 ``` csharp
@@ -1197,7 +1223,7 @@ foreach (irr_texel in irradiance_map.texels)
 }
 ```
 
-# 52_Image Based Reflection_intro
+## 52_Image Based Reflection_intro
 
 IBL(Image Based Lighting)-Reflection
 
@@ -1208,11 +1234,12 @@ IBL(Image Based Lighting)-Reflection
 - Detail
 - Exposure
 
-## texCUBElod  - LOD는 (level of detail)를 의미.
+### texCUBElod  - LOD는 (level of detail)를 의미.
+
 - texCUBElod(cubeMap, xyzw) (xyz - normal direction, w - detail(max: 1))
 
 
-# 55_Image Based Refraction_intro1
+## 55_Image Based Refraction_intro1
 
 - 매질에 따라 direction / speed가 달라짐.
 
@@ -1221,24 +1248,41 @@ IBL(Image Based Lighting)-Reflection
 
 - 56: 굴절 구하는 공식 - skip
 
+## 58_Image Based Fresnel_intro
 
-# 58_Image Based Fresnel_intro
-# 61. Coordinate Spaces
-# 62. Transforming Coordinate Spaces
-# 63. Shadow Mapping - intro
-# 66. BRDF - intro
-~~~
+skip
+
+## 61. Coordinate Spaces
+
+skip
+
+## 62. Transforming Coordinate Spaces
+
+skip
+
+## 63. Shadow Mapping - intro
+
+skip
+
+## 66. BRDF - intro
+
+``` ref
 BRDF 는 "Bidirectional Reflectance Distribution Function" 의 머리글자입니다. 우리 말로는 "양방향 반사율 분포 함수"입니다. 이 BRDF 는 Diffuse BRDF 와 Specular BRDF 로 나뉩니다.
 출처: https://lifeisforu.tistory.com/386 [그냥 그런 블로그]
-~~~
+```
 
 BRDF - ex) 뷰 방향과 라이트 방향으로부터, 불투명한 표면에 반사되는 방식을 구함.
 
-# 67. BRDF - Spherical Coordinate System
-# 68. BRDF - Anisotropy - intro
+## 67. BRDF - Spherical Coordinate System
 
+skip
 
-# TODO
+## 68. BRDF - Anisotropy - intro
+
+skip
+
+## TODO
+
 - [white noise](https://www.ronja-tutorials.com/2018/09/02/white-noise.html)
 - [날아다니는 나비 만들기](https://holdimprovae.blogspot.com/2019/02/studyunityshader.html)
 - [Hbao Plus Analysis 0](https://hrmrzizon.github.io/2017/11/15/hbao-plus-analysis-0/)
