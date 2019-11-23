@@ -284,6 +284,10 @@ out.texcoord.xy = TRANSFORM_TEX(in.texcoord, _MainTex);
 ``` ref
 Direct X
 
+    UV 좌표계가 텍스처 메모리 레이아웃과 일치한다는 장점
+    따라서 UV좌표를 기반으로 텍스처 조작(texture manipulation)을 하면 매우 직관적이고 쉬움
+    - https://blog.popekim.com/ko/2012/06/11/unity-i-love-you-but-your-uv-is-horrible.html
+
 (0,0)        (1,0)
   +-----+-----+
   |     |     |
@@ -591,15 +595,6 @@ TBN : (Tangent Binormal Normal)
 
 (World-space) TBN-matrix
 
-``` ref
-v.normal
-v.tangent
-binormal = cross(normal, tangent)
---------------------------------
-world-space normal = object-space normal * unity_WorldToObject
-world-space tangent = object-space tangent * unity_ObjectToWorld
-world-space binormal = cross(world-space normal, world-space tangent)
-```
 
 - 둘다 ObjectToWorld는 ? scale (1, 1, 1) =>  (2, 2, 2) 처럼 균등이면 문제가 없다. 하지만, 메쉬가 기울어져있으면,
   - <https://forum.unity.com/threads/world-space-normal.58810/>
@@ -615,10 +610,16 @@ world-space binormal = cross(world-space normal, world-space tangent)
 ![figure10.8](./res/figure10_8.jpg)
 
 ``` ref
-    world-space normal = object-space normal * unity_ObjectToWorld
-    world-space tangent = object-space tangent * unity_ObjectToWorld
-    world-space binormal = cross(world-space normal, world-space tangent)
+    mul(matrix, vector) == mul(vector, transpose(matrix))
 ```
+
+``` ref
+    world-N = mul(obj-N, (float3x3)unity_WorldToObject);
+    world-T = mul((float3x3)unity_ObjectToWorld, obj-T);
+    world-B = cross(world-N, world-T);
+```
+
+
 
 - 유니티의 rgb 입력 범위는 [0 ~ 1]
 - 유니티의 노멀의 범위는 [-1 ~ 1]
