@@ -576,7 +576,9 @@ VS
     obj_TBN = float3(Input.T, cross(Input.N, Input.T), Input.N); // object to tangent TBN
 
 PS
-      obj_N = mul(tangent_N,  obj_TBN);
+      obj_N = mul(inverse(obj_TBN), tangent_N);
+            = mul(transpose(obj_TBN), tangent_N);
+            = mul(tangent_N,  obj_TBN);
     world_N = mul(obj_N, unity_World2Object);
 ```
 
@@ -611,9 +613,13 @@ mul(M_want, v) == mul( transpose( unity_World2Object ), V )
 ```
 
 ![normal-1](res/normal-1.png)
+
 ![normal-2](res/normal-2.png)
+
 ![1](res/DeriveInvTrans_1.svg)
+
 ![2](res/FactorOutTranspose_2.svg)
+
 ![3](res/FactorOutInverse_3.svg)
 
 ### from tangent_N to world_N
@@ -627,7 +633,7 @@ mul(M_want, v) == mul( transpose( unity_World2Object ), V )
 PS
     tangent_N = tex2D(_N_Texture, Input.mUV).rgb;
     tangent_N = (tangent_N * 2) - 1;
-      world_N = mul(world_TBN, tangent_N);
+      world_N = mul(tangent_N, world_TBN);
 ```
 
 ## 27. DXT-Compression
@@ -707,14 +713,7 @@ ST - surface's coordinate space.
 | zw  | offset |
 ```
 
-----------------------------------------------------------------
-
 ## 30. Outline Shader - intro
-
-## 31. Outline Shader - code
-
-- 기준 모델 스케일 업. 단일 생상으로 칠하기
-- 그 위에 덧 그리기
 
 ### 행렬
 
@@ -748,6 +747,7 @@ ST - surface's coordinate space.
 #### 회전 행렬
 
 2차원 회전
+
 ``` ref
 | x' | = | cos$ -sin$||x|
 | y' |   | sin$  cos$||y|
@@ -781,6 +781,18 @@ Z
 | 0     0     1(z) 0    | (z의 아래 마지막 열은 비워야하니 맨 위가 -sin$)
 | 0     0     0    1    |
 ```
+
+### 아웃라인 쉐이더 개괄
+
+- Pass 1
+  - 기준 모델 스케일 업.
+  - outline 생상으로 칠하기
+- Pass 2
+  - 그 위에 덧 그리기
+
+----------------------------------------------------------------
+
+## 31. Outline Shader - code
 
     Blend SrcAlpha OneMinusSrcAlpha
 
