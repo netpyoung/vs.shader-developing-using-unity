@@ -437,48 +437,61 @@ float4 vertexAnimNormal(float4 p, float4 normal)
 }
 ```
 
-----------------------------------------------------------------
-
 ## 21. Rendering Pipeline - part 1
-
-TODO
 
 ![rendering_pipeline](res/rendering_pipeline.jpg)
 
-## 22. Rendering Pipeline - part 2
+### RenderState
 
-- **TODO 이거 다시 쌈박하게 정리해야함.**
-
-``` ref
-RenderState
+- Material
 - Vertex shader
 - Pixel shader
 - texture
 - Lighting setting
 
-DrawCall
+### Batch
 
-[RenderState] [Draw A] [Draw B] [Draw C]
-Batches - RenderState 변화 ABC 동일 RenderState
-Saved by batching - A다음에 오는 B, C를 그릴 동안 RenderState변화가 없음.
+RenderState의 변화.
 
-Batches : 1     Saved by batching : 2
-DrawCall - 3
+예)
+
+``` ref
+[RenderStateX [Draw A] [Draw B] [Draw C]]
+
+DrawCall          : 3번 (A, B, C)
+RenderState       : RenderStateX
+Batches           : 1번 (A, B, C가 동일한 RenderState)
+Saved by batching : 2.  (A다음에 오는 B, C를 그릴 동안 RenderState변화가 없음.)
 ```
 
-## 23. Normal Maps _ Types
+### Fragment Shader 이후
+
+``` ref
+ZTest
+  -> Pass <Z-Buffer>
+  -> 블랜딩
+  -> [선택적]스텐실 테스트
+  -> Pass
+  -> [선택적] Color Mask
+  -> Final Color
+  -> <Color Buffer>
+```
+
+## 22. Rendering Pipeline - part 2
+
+- <https://docs.unity3d.com/Manual/SL-CullAndDepth.html>
+
+|        |                                       |                                                                                                    |
+| ------ | ------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| ZWrite | [On]/Off                              | Z-Buffer 값을 작성할지 안할지. Off시 Z-Buffer 변경안함. On시 ZTest통과시 Z-Buffer값을 현재 ZTest값으로 설정(불투명 오브젝트에서 많이 쓰임) |
+| Cull   | [Back] / Front / Off                  | 해당 면을 렌더링 하지 않음                                                                                    |
+| ZTest  | [(<=)LEqual]/Less/NotEqual/Always ... | if ( Z-Buffer `xop` Z-Depth )                                                                      |
+
+![z_buffer_and_color_buffer.jpg](res/z_buffer_and_color_buffer.jpg)
+
+## 23. Normal Maps Types
 
 - <http://wiki.polycount.com/wiki/Normal_Map_Technical_Details>
-- 우리가 맨날 보는 퍼런맵은 Tangent-Space Normal Map임.
-- 근데 왜 쓰는지 좀 알아보자.
-
-### World-Space Normal Map
-
-UP = blue
-
-- does not require additional per-pixel transforms, so it works faster.
-- won’t work right if your object changes shape (character animations)
-- World-space is basically the same as object-space, except it requires the model to remain in its original orientation, neither rotating nor deforming, so it’s almost never used.
 
 ### Object-Space Normal Map
 
@@ -489,92 +502,76 @@ UP = blue
 ### Tangent-Space Normal Map
 
 - forward face기반.
-Tangent Vector는 Normal Vector와 수직인 벡터이다(여러개...)
-따라서 통상적으로 UV 좌표와 비교하여
-- Tangent Vector: U 좌표와 일치하는 Vector
-- BiTangent Vector: V 좌표와 일치하는 Vector
+- Tangent Vector는 Normal Vector와 수직인 벡터이다(여러개...). 따라서 통상적으로 UV 좌표와 비교하여
+  - Tangent Vector: U 좌표와 일치하는 Vector
+  - BiTangent Vector: V 좌표와 일치하는 Vector
 
 TBN-matrix
-(Tangent Binormal Normal)
-TBN = | Tx Ty Tz |
-      | Bx By Bz |
-      | Nx Ny Nz |
 
-- 노멀맵이 적용된 물체의 표면을 기준으로 Normal Vector값을 연산하여 저장한 이미지이다.
-- 물체는 보통 표면의 바깥(z)으로 튀어 나오므로 주로 파랗게 보임.
-Predominantly-blue colors. Object can rotate and deform. Good for deforming meshes, like characters, animals, flags, etc.
+``` ref
+TBN = | Tx Ty Tz | // Tangent  | U
+      | Bx By Bz | // Binormal | V
+      | Nx Ny Nz | // Normal
+```
 
-- Easier to overlay painted details.
-- Easier to use image compression.
-- Slightly slower performance than an object-space map (but not by much).
+| Software | Red | Green | Blue |
+| -------- | --- | ----- | ---- |
+| `Unity`  | X+  | Y+    | Z+   |
+| Maya     | X+  | Y+    | Z+   |
+| Blender  | X+  | Y+    | Z+   |
+| `Unreal` | X+  | Y-    | Z+   |
+| 3ds Max  | X+  | Y-    | Z+   |
 
 - Right handedness, which coincides with OpenGL is indicated with a plus sign (ex. +Y)
 - Left handedness, which coincides with DirectX, is indicated with a negative sign (ex. -Y)
 
-| Software | Red | Green | Blue |
-| -------- | --- | ----- | ---- |
-| Maya     | X+  | Y+    | Z+   |
-| Blender  | X+  | Y+    | Z+   |
-| Unity    | X+  | Y+    | Z+   |
-| 3ds Max  | X+  | Y-    | Z+   |
-| Unreal   | X+  | Y-    | Z+   |
-
-## 24 - Points and Vectors
+## 24. Points and Vectors
 
 skip
 
 ## 25. Vector Multiplication
 
-이거 이름 햇갈리기 쉬움.
+- 내적과 외적 공식.
+- 내적과 외적을 시각적으로 생각할 수 있어야 함.
+- 이거 이름 햇갈리기 쉬움.
 
-| Dot Product   | Inner Product | 내적 |
+### | Dot Product   | Inner Product | 내적 |
 
 - 닷은 점이니까 모이는건 내적
 - 점이니까 두개 모아서 하나가 됨.
 - 하나로 모이니 두 벡터 사이의 각도를 구할 수 있음.
 - 각도니까 cos연산 들어감.
 - <https://rfriend.tistory.com/145>
+- 교환법칙이 성립
 
-| Cross Product | Outer Product | 외적 |
+``` ref
+        1
+        |
+        |
+0-------+------ 0
+        |
+        |
+       -1
+```
+
+| 각도   | 값   |
+| ---- | --- |
+| 0    | 1   |
+| 90   | 0   |
+| 180  | -1  |
+| -270 | 0   |
+
+### | Cross Product | Outer Product | 외적 |
 
 - 크로스는 삐죽하니까 외적으로 외울껏.
 - X 니까 삐저나옴.
 - X가 직각이니 수직 구할때 씀.
 - <https://rfriend.tistory.com/146>
+- 교환법칙 성립안함
 
-교환법칙 성립안함
+----------------------------------------------------------------
 
-``` ref
-손가락 맨날 햇갈림 이케 외우자.
-X : 엄지(엄지는 항상 오른쪽방향으로)
-Y : 검지(검지는 항상 위쪽)
-Z : 중지
-
-X x Z = Y : 오른손 좌표계 - OpenGL(since 1992) '오'픈 지엘이니(or 먼저나왔으니) 오른쪽.
-  /Z
- /
-+---- X
-|
-|
-Y
-
-  Y
-  |
-  |
-  +---- X
- /
-/
-Z
-
-X x Z = Y : 왼손 좌표계 - DirectX(since 1995) 나중에 나왔으니 왼쪽.
-
-Y
-| /Z
-|/
-+---- X
-```
-
-## 26. Normal Map Shader - intro
+## TODO: 26. Normal Map Shader - intro
 
 TBN : (Tangent Binormal Normal)
 
@@ -595,6 +592,7 @@ TBN : (Tangent Binormal Normal)
 
 (World-space) TBN-matrix
 
+- <https://paroj.github.io/gltut/Illumination/Tut09%20Normal%20Transformation.html>
 
 - 둘다 ObjectToWorld는 ? scale (1, 1, 1) =>  (2, 2, 2) 처럼 균등이면 문제가 없다. 하지만, 메쉬가 기울어져있으면,
   - <https://forum.unity.com/threads/world-space-normal.58810/>
@@ -618,8 +616,6 @@ TBN : (Tangent Binormal Normal)
     world-T = mul((float3x3)unity_ObjectToWorld, obj-T);
     world-B = cross(world-N, world-T);
 ```
-
-
 
 - 유니티의 rgb 입력 범위는 [0 ~ 1]
 - 유니티의 노멀의 범위는 [-1 ~ 1]
@@ -725,31 +721,25 @@ TBN : (Tangent Binormal Normal)
 
 ## 28. Normal Map Shader - part 1
 
-skip
-
 ## 29. Normal Map Shader - part 2
 
 ``` ref
-    o.normalWorld = normalize(mul(v.normal, unity_WorldToObject));
-    o.tangentWorld = normalize(mul(v.tangent, unity_ObjectToWorld));
-    o.binormalWorld = normalize(cross(o.normalWorld, o.tangentWorld) * v.tangent.w);
-
+    Output.T = normalize(mul(Input.T, unity_ObjectToWorld));
+    Output.N = normalize(mul(Input.N, unity_WorldToObject));
+    Output.B = normalize(cross(Output.N, Output.T) * Input.T.w);
 
     uniform sampler2D _MainTex;
     uniform float4 _MainTex_ST;
 ```
 
-tangent.w
-- https://forum.unity.com/threads/what-is-tangent-w-how-to-know-whether-its-1-or-1-tangent-w-vs-unity_worldtransformparams-w.468395/
+[Input.T.w를 곱하는 이유](https://forum.unity.com/threads/what-is-tangent-w-how-to-know-whether-its-1-or-1-tangent-w-vs-unity_worldtransformparams-w.468395/)
 
 The tangent is the U of the UV, which for both OpenGL and DirectX is left to right (0.0 on the left, 1.0 on the right). The binormal is the V of the UV, which is different in OpenGL and DirectX. OpenGL is bottom to top, and DirectX is top to bottom. This is also where the difference in many engine's and 3d tools' preference for "+Y / -Y" normal maps comes from.
 
-
-* `UV`, `ST` 도대체 뭐야.
-    - 3d 좌표계에서 xyzw 취함. uv남음. st남음.
-    - uv - 텍스처 좌표계
-    - st - 텍셀(texel = Texture + pixel) 좌표계
-
+- `UV`, `ST` 도대체 뭐야.
+  - 3d 좌표계에서 xyzw 취함. uv남음. st남음.
+  - uv - 텍스처 좌표계
+  - st - 텍셀(texel = Texture + pixel) 좌표계
 
 ``` ref
 UV - texture's coordinate
@@ -770,26 +760,18 @@ ST - surface's coordinate space.
 | xy  | tiling |
 | zw  | offset |
 
+- [노말맵은 왜 파란가?](https://www.youtube.com/watch?v=Y3rn-4Nup-E)
+  - y는 뒤집어 저장하여 아티스트가 보기 편하도록 저장하는게 작업 효율이 좋다더라.
+- [Adding depth to 2D with hand-drawn normal maps in The Siege and the Sandfox](https://www.gamasutra.com/view/news/312977/Adding_depth_to_2D_with_handdrawn_normal_maps_in_The_Siege_and_the_Sandfox.php)
 
-* 나중에 확인해볼껏 (http://egloos.zum.com/chulin28ho/v/5339578)
+## 30. Outline Shader - intro
 
-    일반적인 노멀맵은 (탄젠트, 바이노멀, 노멀) 순서로 저장 되어 있습니다.
-    하지만, DirectX의 경우 표준좌표계는 (탄젠트, 노멀, 바이노멀) 순입니다.
+## 31. Outline Shader - code
 
-
-* [노말맵은 왜 파란가?](https://www.youtube.com/watch?v=Y3rn-4Nup-E)
-    - y는 뒤집어 저장하여 아티스트가 보기 편하도록 저장하는게 작업 효율이 좋다더라.
-
-
-- [Adding depth to 2D with hand-drawn normal maps in The Siege and the Sandfox
-](https://www.gamasutra.com/view/news/312977/Adding_depth_to_2D_with_handdrawn_normal_maps_in_The_Siege_and_the_Sandfox.php)
-
-# 30. Outline Shader - intro
-# 31. Outline Shader - code
 - 기준 모델 스케일 업. 단일 생상으로 칠하기
 - 그 위에 덧 그리기
 
-~~~
+``` ref
 단위 행렬.
 | 1 0 0 0 |
 | 0 1 0 0 |
@@ -816,6 +798,7 @@ ST - surface's coordinate space.
 - 회전행렬 기준으로 생각한다.
 - 2차원 회전 행렬을 기억한다.
 - 기준 행 아래가 `-sin$`이다.
+
 | 1(x)  0    0     0    | (x 아레 -sin$)
 | 0     cos$ -sin$ 0    |
 | 0     sin$  cos$ 0    |
@@ -831,8 +814,7 @@ ST - surface's coordinate space.
 | sin$   cos$ 0    0    |
 | 0     0     1(z) 0    | (z의 아래 마지막 열은 비워야하니 맨 위가 -sin$)
 | 0     0     0    1    |
-~~~
-
+```
 
     Blend SrcAlpha OneMinusSrcAlpha
 
@@ -845,7 +827,8 @@ ST - surface's coordinate space.
 - TODO https://www.slideshare.net/pjcozzi/z-buffer-optimizations
 - TODO https://blog.csdn.net/puppet_master/article/details/53900568
 - [5강 알파와알파소팅](https://www.slideshare.net/jpcorp/5-10351002)
-~~~
+
+``` ref
     C  Geometry + 3
   B    Geometry + 2
 A      Geometry + 1
@@ -858,7 +841,7 @@ ZTest Always(Off) - 항상 pass
 
 ZWrite On  - open deep write
 ZWrite Off - close deep write
-~~~
+```
 
     Cull Front
 
@@ -892,12 +875,14 @@ ZWrite Off - close deep write
 갠적으론 gooch + depth 기반 PS선따기 원츄! ㅡ_ㅡb
 ~~~
 
-# 32. Author_s Check-in
-pass
+## 32. Author_s Check-in
 
-# 33. Multi Variant Shader and Cginc files
-# 34. Multi Variant Shader - part 1
-# 35. Multi Variant Shader - part 2
+## 33. Multi Variant Shader and Cginc files
+
+## 34. Multi Variant Shader - part 1
+
+## 35. Multi Variant Shader - part 2
+
 _변수명("레이블", 타입) = 디폴트값
 
 ~~~
@@ -922,10 +907,12 @@ _변수명("레이블", 타입) = 디폴트값
 ~~~
 
 
-# 36. Basic Lighting Model and Rendering Path - part 1
-# 36. Basic Lighting Model and Rendering Path - part 2
+## 36. Basic Lighting Model and Rendering Path - part 1
 
-## BEADS(구슬 목걸이)
+## 36. Basic Lighting Model and Rendering Path - part 2
+
+### BEADS(구슬 목걸이)
+
 - `B`asic Lighting Model
 
 |            |      |                     |
@@ -950,32 +937,35 @@ _변수명("레이블", 타입) = 디폴트값
 | Deferred shading                   |                 |
 | Legacy Vertex Lit                  |                 |
 
+### Fowrad Rendering
 
-## Fowrad Rendering
 - https://docs.unity3d.com/Manual/RenderTech-ForwardRendering.html
 - 5 object x 4 lighting = 20 draw call
 - 최적화 해서 라이트가 영향을 주는 오브젝트만 그림
 - 어쨋든, 라이트가 늘어날 수록, 드로우 콜 수가 배로 늘어남.
 - 모바일같은 척박한 환경에서는
-    - 라이트를 하나만 유지
-    - 라이트를 미리 텍스쳐에 구음.
-### Base Pass
-~~~
+  - 라이트를 하나만 유지
+  - 라이트를 미리 텍스쳐에 구음.
+
+#### Base Pass
+
+``` shader
 Tag { Queue = Transparency ...}
 Pass {
     LightMode = "Forward Base"
 }
-~~~
+```
 
 - 1 per pixel `directional` light rendering
-    - Spherical harmonic lights(Light probes, Global Illumination, Sky Ambient)
+  - Spherical harmonic lights(Light probes, Global Illumination, Sky Ambient)
 
-### Additional Pass
-~~~
+#### Additional Pass
+
+``` shader
 Pass {
     LightMode = "Forward Add"
 }
-~~~
+```
 
 - 1 per pixel additional light
 
@@ -1023,15 +1013,9 @@ directional light에는 forward base로 point light에는 forward add로 두가�
 
 ## 38. Diffuse Reflection - intro
 
-skip
-
 ## 39. Diffuse Reflection - code 1
 
-skip
-
 ## 40. Diffuse Reflection - code 2
-
-skip
 
 ## 41. Diffuse Reflection - code 3
 
@@ -1251,19 +1235,11 @@ IBL(Image Based Lighting)-Reflection
 
 ## 58_Image Based Fresnel_intro
 
-skip
-
 ## 61. Coordinate Spaces
-
-skip
 
 ## 62. Transforming Coordinate Spaces
 
-skip
-
 ## 63. Shadow Mapping - intro
-
-skip
 
 ## 66. BRDF - intro
 
@@ -1276,11 +1252,7 @@ BRDF - ex) 뷰 방향과 라이트 방향으로부터, 불투명한 표면에 �
 
 ## 67. BRDF - Spherical Coordinate System
 
-skip
-
 ## 68. BRDF - Anisotropy - intro
-
-skip
 
 ## TODO
 
@@ -1320,3 +1292,41 @@ https://www.slideshare.net/jpcorp/5-10351002
 
 
 [좌표계]: res/coordinate_systems.png
+
+
+--------------------
+
+
+## 기타
+
+### 오른손 / 왼손 좌표계
+
+``` ref
+손가락 맨날 햇갈림 이케 외우자.
+X : 엄지(엄지는 항상 오른쪽방향으로)
+Y : 검지(검지는 항상 위쪽)
+Z : 중지
+
+X x Z = Y : 오른손 좌표계 - OpenGL(since 1992) '오'픈 지엘이니(or 먼저나왔으니) 오른쪽.
+  /Z
+ /
++---- X
+|
+|
+Y
+
+  Y
+  |
+  |
+  +---- X
+ /
+/
+Z
+
+X x Z = Y : 왼손 좌표계 - DirectX(since 1995) 나중에 나왔으니 왼쪽.
+
+Y
+| /Z
+|/
++---- X
+```
