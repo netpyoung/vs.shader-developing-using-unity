@@ -1,6 +1,4 @@
-﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
-Shader "ShaderDev/Outline"
+﻿Shader "ShaderDev/Outline"
 {
 	Properties
 	{
@@ -23,101 +21,85 @@ Shader "ShaderDev/Outline"
 			Blend SrcAlpha OneMinusSrcAlpha
 			Zwrite Off
 			Cull Front
-			CGPROGRAM
-			//http://docs.unity3d.com/Manual/SL-ShaderPrograms.html
-			#pragma vertex vert
-			#pragma fragment frag
+
+			HLSLPROGRAM
+			#include "UnityCG.cginc"
+
+			#pragma vertex vs_main
+			#pragma fragment ps_main
 			
-			//http://docs.unity3d.com/ru/current/Manual/SL-ShaderPerformance.html
-			//http://docs.unity3d.com/Manual/SL-ShaderPerformance.html
 			uniform half4 _Color;
 			uniform half _OutlineWidth;
 			uniform half4 _OutlineColor;
 
-			//https://msdn.microsoft.com/en-us/library/windows/desktop/bb509647%28v=vs.85%29.aspx#VS
-			struct vertexInput
+			struct VS_INPUT
 			{
-				float4 vertex : POSITION;
+				float4 mPosition : POSITION;
 			};
 			
-			struct vertexOutput
+			struct VS_OUTPUT
 			{
-				float4 pos : SV_POSITION; 
+				float4 mPosition : SV_POSITION; 
 			};
 
-			float4 Outline(float4 vertexPosition, float outlineWidth)
+			float4 Outline(float4 vertexPosition, float w)
 			{
-				float4x4 scaleMatrix;
-				scaleMatrix[0][0] = 1.0 + outlineWidth;
-				scaleMatrix[0][1] = 0.0;
-				scaleMatrix[0][2] = 0.0;
-				scaleMatrix[0][3] = 0.0;
-				scaleMatrix[1][0] = 0.0;
-				scaleMatrix[1][1] = 1.0 + outlineWidth;
-				scaleMatrix[1][2] = 0.0;
-				scaleMatrix[1][3] = 0.0;
-				scaleMatrix[2][0] = 0.0;
-				scaleMatrix[2][1] = 0.0;
-				scaleMatrix[2][2] = 1.0 + outlineWidth;
-				scaleMatrix[2][3] = 0.0;
-				scaleMatrix[3][0] = 0.0;
-				scaleMatrix[3][1] = 0.0;
-				scaleMatrix[3][2] = 0.0;
-				scaleMatrix[3][3] = 1.0;
-				return mul(scaleMatrix, vertexPosition);
+				float4x4 m;
+				m[0][0] = 1.0 + w; m[0][1] = 0.0;     m[0][2] = 0.0;     m[0][3] = 0.0; 
+				m[1][0] = 0.0;     m[1][1] = 1.0 + w; m[1][2] = 0.0;     m[1][3] = 0.0;
+				m[2][0] = 0.0;     m[2][1] = 0.0;     m[2][2] = 1.0 + w; m[2][3] = 0.0;
+				m[3][0] = 0.0;     m[3][1] = 0.0;     m[3][2] = 0.0;     m[3][3] = 1.0;
+				return mul(m, vertexPosition);
 			}
 			
-			vertexOutput vert(vertexInput v)
+			VS_OUTPUT vs_main(VS_INPUT Input)
 			{
-				vertexOutput o;
-				o.pos = UnityObjectToClipPos(Outline(v.vertex, _OutlineWidth));
-				return o;
+				VS_OUTPUT Output;
+				Output.mPosition = UnityObjectToClipPos(Outline(Input.mPosition, _OutlineWidth));
+				return Output;
 			}
 			
-			half4 frag(vertexOutput i) : COLOR
+			half4 ps_main(VS_OUTPUT Input) : COLOR
 			{
 				return _OutlineColor;
 			}
-			ENDCG
+			ENDHLSL
 		}
 
 		Pass
 		{
 			Blend SrcAlpha OneMinusSrcAlpha
-			CGPROGRAM
-				//http://docs.unity3d.com/Manual/SL-ShaderPrograms.html
-				#pragma vertex vert
-				#pragma fragment frag
+			HLSLPROGRAM
+			#include "UnityCG.cginc"
+			#pragma vertex vs_main
+			#pragma fragment ps_main
 
-				//http://docs.unity3d.com/ru/current/Manual/SL-ShaderPerformance.html
-				//http://docs.unity3d.com/Manual/SL-ShaderPerformance.html
-				uniform half4 _Color;
-				uniform half _OutlineWidth;
-				uniform half4 _OutlineColor;
+			uniform half4 _Color;
+			uniform half _OutlineWidth;
+			uniform half4 _OutlineColor;
 
-				//https://msdn.microsoft.com/en-us/library/windows/desktop/bb509647%28v=vs.85%29.aspx#VS
-				struct vertexInput
-				{
-					float4 vertex : POSITION;
-				};
+			struct VS_INPUT
+			{
+				float4 mPosition : POSITION;
+			};
 
-				struct vertexOutput
-				{
-					float4 pos : SV_POSITION;
-				};
+			struct VS_OUTPUT
+			{
+				float4 mPosition : SV_POSITION;
+			};
 
-				vertexOutput vert(vertexInput v)
-				{
-					vertexOutput o;
-					o.pos = UnityObjectToClipPos(v.vertex);
-					return o;
-				}
-
-				half4 frag(vertexOutput i) : COLOR
-				{
-					return _Color;
-				}
-				ENDCG
+			VS_OUTPUT vs_main(VS_INPUT Input)
+			{
+				VS_OUTPUT Output;
+				Output.mPosition = UnityObjectToClipPos(Input.mPosition);
+				return Output;
 			}
+
+			half4 ps_main(VS_OUTPUT Input) : COLOR
+			{
+				return _Color;
+			}
+			ENDHLSL
+		}
 	}
 }

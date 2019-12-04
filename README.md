@@ -678,13 +678,13 @@ VS
 
     // DXT5nm 버전.
     float3 colorT = tex2D(_Tangent_Map_DXT5nm, Input.mUV).rgb;
-    float3 tangent_N = float(colorT.a * 2 - 1, colorT.g * 2 - 1, 0);
-    tangent_N.z = sqrt(1 - dot(tangent_N.xy, tangent_N.xy));
+    float3 tangent_N   = float(colorT.a * 2 - 1, colorT.g * 2 - 1, 0);
+           tangent_N.z = sqrt(1 - dot(tangent_N.xy, tangent_N.xy));
 
     float3x3 world_TBN = float3x3(Input.T, Input.B, Input.N); // world to tangent TBN
-    float3 world_N = mul(inverse(world_TBN), tangent_N);
-                   = mul(transpose(world_TBN), tangent_N);
-                   = mul(tangent_N, world_TBN);
+    float3   world_N   = mul(inverse(world_TBN), tangent_N);
+                       = mul(transpose(world_TBN), tangent_N);
+                       = mul(tangent_N, world_TBN);
 ```
 
 [Input.T.w를 곱하는 이유](https://forum.unity.com/threads/what-is-tangent-w-how-to-know-whether-its-1-or-1-tangent-w-vs-unity_worldtransformparams-w.468395/)
@@ -794,6 +794,21 @@ Z
 
 ## 31. Outline Shader - code
 
+``` shader
+Blend SrcAlpha OneMinusSrcAlpha
+Zwrite Off
+Cull Front
+
+float4 Outline(float4 vertexPosition, float w)
+{
+    float4x4 m;
+    m[0][0] = 1.0 + w; m[0][1] = 0.0;     m[0][2] = 0.0;     m[0][3] = 0.0; 
+    m[1][0] = 0.0;     m[1][1] = 1.0 + w; m[1][2] = 0.0;     m[1][3] = 0.0;
+    m[2][0] = 0.0;     m[2][1] = 0.0;     m[2][2] = 1.0 + w; m[2][3] = 0.0;
+    m[3][0] = 0.0;     m[3][1] = 0.0;     m[3][2] = 0.0;     m[3][3] = 1.0;
+    return mul(m, vertexPosition);
+}
+```
     Blend SrcAlpha OneMinusSrcAlpha
 
 - https://docs.unity3d.com/kr/current/Manual/SL-Blend.html
