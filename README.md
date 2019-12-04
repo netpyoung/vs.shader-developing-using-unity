@@ -338,8 +338,6 @@ float drawLine(float2 uv, float start, float end)
 
 ## 13. Union and Intersection
 
-skip
-
 ## 14. Circle Pattern
 
 ``` shader
@@ -527,8 +525,6 @@ TBN = | Tx Ty Tz | // Tangent  | U
 
 ## 24. Points and Vectors
 
-skip
-
 ## 25. Vector Multiplication
 
 - 내적과 외적 공식.
@@ -545,12 +541,12 @@ skip
 - 교환법칙이 성립
 
 ``` ref
-| 각도   | 값  |
-| ------ | --- |
-| 0      |  1  |
-| 90     |  0  |
-| 180    | -1  |
-| -270   |  0  |
+| 각도   | 값   |
+| ---- | --- |
+| 0    | 1   |
+| 90   | 0   |
+| 180  | -1  |
+| -270 | 0   |
 
         1
         |
@@ -577,10 +573,10 @@ TBN : (Tangent Binormal Normal)
 
 ``` shader
 VS
-    obj_TBN = float3(Input.T, cross(Input.N, Input.T), Input.N);
+    obj_TBN = float3(Input.T, cross(Input.N, Input.T), Input.N); // object to tangent TBN
 
 PS
-      obj_N = mul(  obj_TBN, tangent_N);
+      obj_N = mul(tangent_N,  obj_TBN);
     world_N = mul(obj_N, unity_World2Object);
 ```
 
@@ -593,22 +589,15 @@ VS
       world_T =    mul(unity_Object2World, Input.T);            // 표면에 붙어있으므로 shifting과 무관
       world_N =    mul(Input.N           , unity_World2Object); // shifting 방지.
       world_B =  cross(world_N, world_T);
-    world_TBN = float3(world_T, world_B, world_N);
+    world_TBN = float3(world_T, world_B, world_N); // world to tangent TBN.
 
 PS
-    world_N = mul(world_TBN, tangent_N);
+    world_N = mul(tangent_N, world_TBN);
 ```
 
 ### normal shiting
 
 ![figure10.8](./res/figure10_8.jpg)
-
-
-![normal-1](res/normal-1.png)
-![normal-2](res/normal-2.png)
-![1](res/DeriveInvTrans_1.svg)
-![2](res/FactorOutTranspose_2.svg)
-![3](res/FactorOutInverse_3.svg)
 
 ``` ref
      M == unity_Object2World;
@@ -621,7 +610,13 @@ mul(M_want, v) == mul( transpose( unity_World2Object ), V )
                == mul(                               V, unity_World2Object )
 ```
 
-### tangent_N
+![normal-1](res/normal-1.png)
+![normal-2](res/normal-2.png)
+![1](res/DeriveInvTrans_1.svg)
+![2](res/FactorOutTranspose_2.svg)
+![3](res/FactorOutInverse_3.svg)
+
+### from tangent_N to world_N
 
 - 유니티의 rgb 입력 범위는 [0 ~ 1]
 - 유니티의 노멀의 범위는 [-1 ~ 1]
@@ -634,7 +629,6 @@ PS
     tangent_N = (tangent_N * 2) - 1;
       world_N = mul(world_TBN, tangent_N);
 ```
-----------------------------------------------------------------
 
 ## 27. DXT-Compression
 
@@ -642,13 +636,6 @@ PS
 - [DXT Compression](https://www.fsdeveloper.com/wiki/index.php?title=DXT_compression_explained)
 - 4x4 픽셀 중에, 색 2개를 고름. 2개의 색을 interpolation시켜서 4x4 color 인덱스를 만듬.
 - 손실압축.
-
-``` ref  
-노멀맵 같은 경우에는 red채널의 변화가 심하기 때문에,
-R채널을 A채널로 바꾸고 DXT5로 저장한 후,
-shader에서 AGB로 접근하여 샘플링하면 상당히 괜찮은 결과를 얻어낼 수 있습니다.
-- https://gpgstudy.com/forum/viewtopic.php?t=24598
-```
 
 ### DXT1 포맷을 이용
 
@@ -658,101 +645,43 @@ shader에서 AGB로 접근하여 샘플링하면 상당히 괜찮은 결과를 �
 | Y   | G     | color1  | 16  |
 | Z   | B     | x       | 0   |
 
-### DXT5nm 포맷을 이용(퀄리티 업)
-
-| V   | color | channel       | bit |
-| --- | ----- | ------------- | --- |
-| X   | R     | a0, a1        | 16  |
-|     |       | alpha indices | 48  |
-| Y   | G     | color0,1      | 32  |
-|     |       | color indices | 32  |
-| Z   | B     | x             | 0   |
-
-- xyzw, wy => _g_r => rg => xyn // r이 뒤로 있으므로, 한바퀴 돌려줘야함.
-- `normal.xy = packednormal.wy * 2 - 1;` (0 ~ 1 => -1 ~ 1)
-- `Z`는 쉐이더에서 계산. 단위 벡터의 크기는 1인것을 이용.(sqrt(x^2 + y^2 + z^2) = 1)
-
-### DXT1, (RGB 5:6:5), (RGBA 5:5:5:1)
-
-|               |                  |
-| ------------- | ---------------- |
-| color0        | 16               |
-| color1        | 16               |
-| color indices | `4 * 4 * 2 = 32` |
-
 ``` ref
-    (RGB)24 * 16 = 384
-    384 / 64 = 6
-    6배를 아낄 수 있다.
-```
+XYZ가 normalize 되었다면, X와 Y만 알아도 Z를 구할 수 있다.
 
-### DXT3
-
-|               |                  |
-| ------------- | ---------------- |
-| alpha         | 64               |
-| color0        | 16               |
-| color1        | 16               |
-| color indices | `4 * 4 * 2 = 32` |
-
-``` ref
-    (RGBA)32 * 16 = 512
-    512 / 128 = 4
-    4배를 아낄 수 있다.
-```
-
-## DXT5
-
-|               |                  |
-| ------------- | ---------------- |
-| a0            | 8                |
-| a1            | 8                |
-| alpha indices | 48               |
-| color0        | 16               |
-| color1        | 16               |
-| color indices | `4 * 4 * 2 = 32` |
-
-``` ref
-    R4G4B4A4
-    R4G4B4A4 (출력시 보간 A8)
-```
-
-- [DXT5nm](https://github.com/castano/nvidia-texture-tools/wiki/NormalMapCompression)
-- [Normalmap compression](https://mgun.tistory.com/1892)
-- [Texture types](http://wiki.polycount.com/wiki/Texture_types)
-- <https://www.nvidia.com/object/real-time-normal-map-dxt-compression.html>
-- [bc5](https://docs.microsoft.com/en-us/windows/desktop/direct3d10/d3d10-graphics-programming-guide-resources-block-compression#bc5)
-
-### (Tangent-space) normal map to (World-space) normal
-
-#### tangent to dxt
-
-``` ref
-    (Object-space) tangent * model matrix(_Object2World) = (World-space) tangent
-    t.x =R=> 0 ~ 1 = `(r * 2) - 1` => -1 ~ 1
-    t.y =G=>
-    t.z =B=>
-
-    R => dxt.alpha
-    G => dxt.color0, 1
+1 = (X * X) + (Y * Y) + (Z * Z)
+Z = sqrt(1 - ((X * X) + (Y * Y)))
 ```
 
 ## 28. Normal Map Shader - part 1
 
 ## 29. Normal Map Shader - part 2
 
-``` ref
+``` shader
+    uniform sampler2D _MainTex;
+    uniform float4 _MainTex_ST;
+
+PS
     Output.T = normalize(mul(Input.T, unity_ObjectToWorld));
     Output.N = normalize(mul(Input.N, unity_WorldToObject));
     Output.B = normalize(cross(Output.N, Output.T) * Input.T.w);
 
-    uniform sampler2D _MainTex;
-    uniform float4 _MainTex_ST;
+VS
+    // 일반 탄젠트맵 버전.
+    float3 colorT = tex2D(_Tangent_Map, Input.mUV).rgb;
+    float3 tangent_N = colorT * 2 - 1;
+
+    // DXT5nm 버전.
+    float3 colorT = tex2D(_Tangent_Map_DXT5nm, Input.mUV).rgb;
+    float3 tangent_N = float(colorT.a * 2 - 1, colorT.g * 2 - 1, 0);
+    tangent_N.z = sqrt(1 - dot(tangent_N.xy, tangent_N.xy));
+
+    float3x3 world_TBN = float3x3(Input.T, Input.B, Input.N); // world to tangent TBN
+    float3 world_N = mul(inverse(world_TBN), tangent_N);
+                   = mul(transpose(world_TBN), tangent_N);
+                   = mul(tangent_N, world_TBN);
 ```
 
 [Input.T.w를 곱하는 이유](https://forum.unity.com/threads/what-is-tangent-w-how-to-know-whether-its-1-or-1-tangent-w-vs-unity_worldtransformparams-w.468395/)
-
-The tangent is the U of the UV, which for both OpenGL and DirectX is left to right (0.0 on the left, 1.0 on the right). The binormal is the V of the UV, which is different in OpenGL and DirectX. OpenGL is bottom to top, and DirectX is top to bottom. This is also where the difference in many engine's and 3d tools' preference for "+Y / -Y" normal maps comes from.
 
 - `UV`, `ST` 도대체 뭐야.
   - 3d 좌표계에서 xyzw 취함. uv남음. st남음.
@@ -773,16 +702,12 @@ ST - surface's coordinate space.
 (0, 0) +-------+
 
     o.texcoord.xy = (v.texcoord.xy * _MainTex_ST.xy + _MainTex_ST.zw)
-```
 
-|     |        |
-| --- | ------ |
 | xy  | tiling |
 | zw  | offset |
+```
 
-- [노말맵은 왜 파란가?](https://www.youtube.com/watch?v=Y3rn-4Nup-E)
-  - y는 뒤집어 저장하여 아티스트가 보기 편하도록 저장하는게 작업 효율이 좋다더라.
-- [Adding depth to 2D with hand-drawn normal maps in The Siege and the Sandfox](https://www.gamasutra.com/view/news/312977/Adding_depth_to_2D_with_handdrawn_normal_maps_in_The_Siege_and_the_Sandfox.php)
+----------------------------------------------------------------
 
 ## 30. Outline Shader - intro
 
@@ -791,44 +716,65 @@ ST - surface's coordinate space.
 - 기준 모델 스케일 업. 단일 생상으로 칠하기
 - 그 위에 덧 그리기
 
+### 행렬
+
+#### 단위 행렬
+
 ``` ref
-단위 행렬.
 | 1 0 0 0 |
 | 0 1 0 0 |
 | 0 0 1 0 |
 | 0 0 0 1 |
+```
 
-이동(translate) 행렬
+#### 이동(translate) 행렬
+
+``` ref
 | 1 0 0 x |
 | 0 1 0 y |
 | 0 0 1 z |
 | 0 0 0 1 |
+```
 
-스케일(scale) 행렬
+#### 스케일(scale) 행렬
+
+``` ref
 | x 0 0 0 |
 | 0 y 0 0 |
 | 0 0 z 0 |
 | 0 0 0 1 |
+```
+
+#### 회전 행렬
 
 2차원 회전
+``` ref
 | x' | = | cos$ -sin$||x|
 | y' |   | sin$  cos$||y|
+```
 
 3차원 회전
+
 - 회전행렬 기준으로 생각한다.
 - 2차원 회전 행렬을 기억한다.
 - 기준 행 아래가 `-sin$`이다.
+
+``` ref
+X
 
 | 1(x)  0    0     0    | (x 아레 -sin$)
 | 0     cos$ -sin$ 0    |
 | 0     sin$  cos$ 0    |
 | 0     0    0     1    |
 
+Y
+
 | cos$  0    sin$  0    |
 | 0     1(y) 0     0    | (y 아레 -sin$)
 | -sin$ 0    cos$  0    |
 | 0     0    0     1    |
 
+Z
 
 | cos$  -sin$ 0    0    |
 | sin$   cos$ 0    0    |
@@ -840,9 +786,6 @@ ST - surface's coordinate space.
 
 - https://docs.unity3d.com/kr/current/Manual/SL-Blend.html
 
-
-
-    Zwrite off << 이거 어렵네..
 
 - TODO https://www.slideshare.net/pjcozzi/z-buffer-optimizations
 - TODO https://blog.csdn.net/puppet_master/article/details/53900568
@@ -856,11 +799,6 @@ A      Geometry + 1
 
 Z-buffer 영향(ZTest - depth test, ZWrite - deep write)
 오브젝트의 깊이값과 현재 캐쉬된 픽셀의 깊이값을 비교해서 패스하면, color버퍼에 쓴다.
-ex) ZTest Less - 깊이가 캐쉬보다 작으면 pass
-ZTest Always(Off) - 항상 pass
-
-ZWrite On  - open deep write
-ZWrite Off - close deep write
 ```
 
     Cull Front
@@ -926,7 +864,6 @@ _변수명("레이블", 타입) = 디폴트값
     shader_feature is very similar to multi_compile. The only difference is that Unity does not include unused variants of shader_feature shaders in the final build. For this reason, you should use shader_feature for keywords that are set from the Materials, while multi_compile is better for keywords that are set from code globally.
 ~~~
 
-
 ## 36. Basic Lighting Model and Rendering Path - part 1
 
 ## 36. Basic Lighting Model and Rendering Path - part 2
@@ -935,31 +872,16 @@ _변수명("레이블", 타입) = 디폴트값
 
 - `B`asic Lighting Model
 
-|            |      |                     |
-| ---------- | ---- | ------------------- |
-| `E`misive  | 발산   | 발광체                 |
-| `A`mbient  | 주변광  | 전체적                 |
-| `D`iffuse  | 난반사광 | 특정방향, 고르게 반사        |
-| `S`pecular | 전반사광 | 특정방향, 특정방향으로 정확히 반사 |
-
-|          |                       |                 |
-| -------- | --------------------- | --------------- |
-| vertex   | per vertex lighting   | vertex shader   |
-| fragment | per fragment lighting | fragment shader |
-
-- Unity support 4 Rendering Path
-
-|                                    |                 |
-| ---------------------------------- | --------------- |
-| Forward Rendering                  | Base Pass       |
-|                                    | Additional Pass |
-| Legacy Deferred(Deferred Lighting) |                 |
-| Deferred shading                   |                 |
-| Legacy Vertex Lit                  |                 |
+|            |      |                        |
+| ---------- | ---- | ---------------------- |
+| `A`mbient  | 주변광  | 전체적                    |
+| `D`iffuse  | 난반사광 | 특정방향 입사, 고르게 반사        |
+| `S`pecular | 전반사광 | 특정방향 입사, 특정방향으로 정확히 반사 |
+| `E`misive  | 발산   | 발광체                    |
 
 ### Fowrad Rendering
 
-- https://docs.unity3d.com/Manual/RenderTech-ForwardRendering.html
+- <https://docs.unity3d.com/Manual/RenderTech-ForwardRendering.html>
 - 5 object x 4 lighting = 20 draw call
 - 최적화 해서 라이트가 영향을 주는 오브젝트만 그림
 - 어쨋든, 라이트가 늘어날 수록, 드로우 콜 수가 배로 늘어남.
@@ -989,12 +911,13 @@ Pass {
 
 - 1 per pixel additional light
 
-~~~
+``` ref
 ex) directional 라이트랑 point 라이트가 있으면,
 directional light에는 forward base로 point light에는 forward add로 두가지 패스를 작성해야 한다.
-~~~
+```
 
 ## Legacy Deferred Lighting
+
 - https://docs.unity3d.com/Manual/RenderTech-DeferredLighting.html
 
 1. 씬을 `Geometry Buffer`에 렌더링한다.(보여지는 각 픽셀의 depth, normal, specular power)
@@ -1046,7 +969,7 @@ directional light에는 forward base로 point light에는 forward add로 두가�
     - 씬에 하나 이상의 라이트가 있다면, 하나의 가장 밝은 directional light가 Base Pass에 사용.
     - 다른 라이트들은 Spherical Harmonics로 간주.
 
-![](res/Row_and_column_major_order.svg)
+![Row_and_column_major_order](res/Row_and_column_major_order.svg)
 
 ~~~
 
@@ -1243,7 +1166,6 @@ IBL(Image Based Lighting)-Reflection
 
 - texCUBElod(cubeMap, xyzw) (xyz - normal direction, w - detail(max: 1))
 
-
 ## 55_Image Based Refraction_intro1
 
 - 매질에 따라 direction / speed가 달라짐.
@@ -1251,9 +1173,9 @@ IBL(Image Based Lighting)-Reflection
 - 굴절률(index of refraction)
 - 굴절률 n = 진공속에서의 빛의 속도 / 매질 내에서 빛의 속도
 
-- 56: 굴절 구하는 공식 - skip
+## 56. 굴절 구하는 공식
 
-## 58_Image Based Fresnel_intro
+## 58. Image Based Fresnel - intro
 
 ## 61. Coordinate Spaces
 
@@ -1350,3 +1272,79 @@ Y
 |/
 +---- X
 ```
+
+
+### DXT
+
+
+``` ref  
+노멀맵 같은 경우에는 red채널의 변화가 심하기 때문에,
+R채널을 A채널로 바꾸고 DXT5로 저장한 후,
+shader에서 AGB로 접근하여 샘플링하면 상당히 괜찮은 결과를 얻어낼 수 있습니다.
+- https://gpgstudy.com/forum/viewtopic.php?t=24598
+```
+
+#### DXT5nm 포맷을 이용(퀄리티 업)
+
+| V   | color | channel       | bit |
+| --- | ----- | ------------- | --- |
+| X   | R     | a0, a1        | 16  |
+|     |       | alpha indices | 48  |
+| Y   | G     | color0,1      | 32  |
+|     |       | color indices | 32  |
+| Z   | B     | x             | 0   |
+
+- xyzw, wy => _g_r => rg => xyn // r이 뒤로 있으므로, 한바퀴 돌려줘야함.
+- `normal.xy = packednormal.wy * 2 - 1;` (0 ~ 1 => -1 ~ 1)
+- `Z`는 쉐이더에서 계산. 단위 벡터의 크기는 1인것을 이용.(sqrt(x^2 + y^2 + z^2) = 1)
+
+#### DXT1, (RGB 5:6:5), (RGBA 5:5:5:1)
+
+|               |                  |
+| ------------- | ---------------- |
+| color0        | 16               |
+| color1        | 16               |
+| color indices | `4 * 4 * 2 = 32` |
+
+``` ref
+    (RGB)24 * 16 = 384
+    384 / 64 = 6
+    6배를 아낄 수 있다.
+```
+
+#### DXT3
+
+|               |                  |
+| ------------- | ---------------- |
+| alpha         | 64               |
+| color0        | 16               |
+| color1        | 16               |
+| color indices | `4 * 4 * 2 = 32` |
+
+``` ref
+    (RGBA)32 * 16 = 512
+    512 / 128 = 4
+    4배를 아낄 수 있다.
+```
+
+#### DXT5
+
+|               |                  |
+| ------------- | ---------------- |
+| a0            | 8                |
+| a1            | 8                |
+| alpha indices | 48               |
+| color0        | 16               |
+| color1        | 16               |
+| color indices | `4 * 4 * 2 = 32` |
+
+``` ref
+    R4G4B4A4
+    R4G4B4A4 (출력시 보간 A8)
+```
+
+- [DXT5nm](https://github.com/castano/nvidia-texture-tools/wiki/NormalMapCompression)
+- [Normalmap compression](https://mgun.tistory.com/1892)
+- [Texture types](http://wiki.polycount.com/wiki/Texture_types)
+- <https://www.nvidia.com/object/real-time-normal-map-dxt-compression.html>
+- [bc5](https://docs.microsoft.com/en-us/windows/desktop/direct3d10/d3d10-graphics-programming-guide-resources-block-compression#bc5)
