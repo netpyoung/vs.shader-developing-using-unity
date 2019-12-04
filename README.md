@@ -485,7 +485,7 @@ ZTest
 | ------ | ------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | ZWrite | [On]/Off                              | Z-Buffer 값을 작성할지 안할지. Off시 Z-Buffer 변경안함. On시 ZTest통과시 Z-Buffer값을 현재 ZTest값으로 설정(불투명 오브젝트에서 많이 쓰임) |
 | Cull   | [Back] / Front / Off                  | 해당 면을 렌더링 하지 않음                                                                                    |
-| ZTest  | [(<=)LEqual]/Less/NotEqual/Always ... | if ( Z-Buffer `xop` Z-Depth )                                                                      |
+| ZTest  | [(<=)LEqual]/Less/NotEqual/Always ... | if ( Z-Buffer `xop` Z-Depth ) { Zwrite }                                                           |
 
 ![z_buffer_and_color_buffer.jpg](res/z_buffer_and_color_buffer.jpg)
 
@@ -545,6 +545,13 @@ skip
 - 교환법칙이 성립
 
 ``` ref
+| 각도   | 값  |
+| ------ | --- |
+| 0      |  1  |
+| 90     |  0  |
+| 180    | -1  |
+| -270   |  0  |
+
         1
         |
         |
@@ -554,13 +561,6 @@ skip
        -1
 ```
 
-| 각도   | 값   |
-| ---- | --- |
-| 0    | 1   |
-| 90   | 0   |
-| 180  | -1  |
-| -270 | 0   |
-
 ### | Cross Product | Outer Product | 외적 |
 
 - 크로스는 삐죽하니까 외적으로 외울껏.
@@ -569,68 +569,86 @@ skip
 - <https://rfriend.tistory.com/146>
 - 교환법칙 성립안함
 
-----------------------------------------------------------------
-
-## TODO: 26. Normal Map Shader - intro
+## 26. Normal Map Shader - intro
 
 TBN : (Tangent Binormal Normal)
 
-``` ref
-(Object-space)TBN-matrix * (Tangent-space)Normal = (Object-space)Normal
-(World-space)TBN-matrix * (Tangent-space)Normal = (World-space)Normal
+### obj TBN 기반으로 world_N 구하기
 
-(Tangent-space) Normal
-* (Object-space)TBN-matrix
-* Object2World / unity_ObjectToWorld
-= (World-space) Normal
+``` shader
+VS
+    obj_TBN = float3(Input.T, cross(Input.N, Input.T), Input.N);
 
-
-(Tangent-space) Normal
-* (World-space)TBN-matrix
-= (World-space) Normal
+PS
+      obj_N = mul(  obj_TBN, tangent_N);
+    world_N = mul(obj_N, unity_World2Object);
 ```
 
-(World-space) TBN-matrix
+### world TBN 기반으로 world_N 구하기
 
-- <https://paroj.github.io/gltut/Illumination/Tut09%20Normal%20Transformation.html>
+world TBN기반으로 world Normal을 얻기위해 PS에서 한번만 곱하면 된다.
 
-- 둘다 ObjectToWorld는 ? scale (1, 1, 1) =>  (2, 2, 2) 처럼 균등이면 문제가 없다. 하지만, 메쉬가 기울어져있으면,
-  - <https://forum.unity.com/threads/world-space-normal.58810/>
-  - <https://stackoverflow.com/questions/13654401/why-transforming-normals-with-the-transpose-of-the-inverse-of-the-modelview-matr>
-  - normal은 표면에 수직이기에, 기울어져 shifting이 발생(틀린 라이트닝 발생.)
-  - tangent는 표면가 밀착되었기에, 문제없음.
-  - Even with the inverse-transpose transformation, normal vectors may lose their unit length; thus, they may need to be renormalized after the transformation.
+``` shader
+VS
+      world_T =    mul(unity_Object2World, Input.T);            // 표면에 붙어있으므로 shifting과 무관
+      world_N =    mul(Input.N           , unity_World2Object); // shifting 방지.
+      world_B =  cross(world_N, world_T);
+    world_TBN = float3(world_T, world_B, world_N);
 
+PS
+    world_N = mul(world_TBN, tangent_N);
+```
+
+### normal shiting
+
+![figure10.8](./res/figure10_8.jpg)
+
+
+![normal-1](res/normal-1.png)
+![normal-2](res/normal-2.png)
 ![1](res/DeriveInvTrans_1.svg)
 ![2](res/FactorOutTranspose_2.svg)
 ![3](res/FactorOutInverse_3.svg)
 
-![figure10.8](./res/figure10_8.jpg)
-
 ``` ref
-    mul(matrix, vector) == mul(vector, transpose(matrix))
+     M == unity_Object2World;
+M_want == transpose( inverse(unity_Object2World) )
+       == transpose( unity_World2Object )
+
+mul(matrix, vector) == mul(vector, transpose(matrix))
+
+mul(M_want, v) == mul( transpose( unity_World2Object ), V )
+               == mul(                               V, unity_World2Object )
 ```
 
-``` ref
-    world-N = mul(obj-N, (float3x3)unity_WorldToObject);
-    world-T = mul((float3x3)unity_ObjectToWorld, obj-T);
-    world-B = cross(world-N, world-T);
-```
+### tangent_N
 
 - 유니티의 rgb 입력 범위는 [0 ~ 1]
 - 유니티의 노멀의 범위는 [-1 ~ 1]
 - n따라서 rgb에서 노멀의 구할려면 범위를 2배로 늘리고, -1만큼 이동시켜줘야함.
 - (color channel * 2) - 1
 
+``` shader
+PS
+    tangent_N = tex2D(_N_Texture, Input.mUV).rgb;
+    tangent_N = (tangent_N * 2) - 1;
+      world_N = mul(world_TBN, tangent_N);
+```
+----------------------------------------------------------------
+
 ## 27. DXT-Compression
 
-- 손실압축.
 - [S3 Texture Compression](https://en.wikipedia.org/wiki/S3_Texture_Compression)
 - [DXT Compression](https://www.fsdeveloper.com/wiki/index.php?title=DXT_compression_explained)
 - 4x4 픽셀 중에, 색 2개를 고름. 2개의 색을 interpolation시켜서 4x4 color 인덱스를 만듬.
+- 손실압축.
 
-  - 노멀맵 같은 경우에는 red채널의 변화가 심하기 때문에, R채널을 A채널로 바꾸고 DXT5로 저장한 후 shader에서 AGB로 접근하여 샘플링하면 상당히 괜찮은 결과를 얻어낼 수 있습니다.
-    - <https://gpgstudy.com/forum/viewtopic.php?t=24598>
+``` ref  
+노멀맵 같은 경우에는 red채널의 변화가 심하기 때문에,
+R채널을 A채널로 바꾸고 DXT5로 저장한 후,
+shader에서 AGB로 접근하여 샘플링하면 상당히 괜찮은 결과를 얻어낼 수 있습니다.
+- https://gpgstudy.com/forum/viewtopic.php?t=24598
+```
 
 ### DXT1 포맷을 이용
 
@@ -743,14 +761,16 @@ The tangent is the U of the UV, which for both OpenGL and DirectX is left to rig
 
 ``` ref
 UV - texture's coordinate
-       +----+ (1, 1)
-       |    |
-(0, 0) +----+
+       +-------+ (1, 1)
+       |       |
+       |       |
+(0, 0) +-------+
 
 ST - surface's coordinate space.
-       +----+ (32, 32)
-       |    |
-(0, 0) +----+
+       +-------+ (32, 32)
+       |       |
+       |       |
+(0, 0) +-------+
 
     o.texcoord.xy = (v.texcoord.xy * _MainTex_ST.xy + _MainTex_ST.zw)
 ```
