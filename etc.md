@@ -32,6 +32,55 @@ Y
 +---- X
 ```
 
+## Column Major vs Row Major
+
+
+![Row_and_column_major_order](res/Row_and_column_major_order.svg)
+
+``` ref
+
+N x 1 matrix : column vector
+1 x N matrix : row vector
+
+그러나 D3DX 는 row-major 행렬을 사용하고 OpenGL은 column-major
+
+https://docs.microsoft.com/en-us/windows/win32/dxmath/pg-xnamath-getting-started?redirectedfrom=MSDN#matrix_convention
+Direct3D has historically used left-handed coordinate system, row-major matrices, row vectors
+
+HLSL shaders default to consuming column-major matrices
+
+
+https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-per-component-math
+Matrix packing order for uniform parameters is set to column-major by default
+ #pragmapack_matrix directive, or with the row_major or the column_major keyword.
+
+Row-Major
+mul(v, TranslateMatrix) = float4
+            | 1 0 0 0 |
+| 1 2 3 1 | | 0 1 0 0 | = | (1 + 5) 2 3 1 |
+            | 0 0 1 0 |
+            | 5 0 0 1 |
+
+
+Colum-Major
+mul(v, TranslateMatrix) = float4
+
+            | 1 0 0 5 |
+| 1 2 3 1 | | 0 1 0 0 | = | 1 2 3 (5 + 1) |
+            | 0 0 1 0 |
+            | 0 0 0 1 |
+
+mul(TranslateMatrix, v) = float4
+
+| 1 0 0 5 | | 1 |   | 1 + 5 |
+| 0 1 0 0 | | 2 | = | 2     |
+| 0 0 1 0 | | 3 |   | 3     |
+| 0 0 0 1 | | 1 |   | 1     |
+
+
+동일한 float4이라도 곱하는 순서에 따라 값이 다르다.
+```
+
 ## DXT
 
 ``` ref  

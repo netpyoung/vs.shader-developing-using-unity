@@ -853,11 +853,55 @@ float4 Outline(float4 vertexPosition, float w)
     The only difference is that Unity does not include unused variants of shader_feature shaders in the final build.
     For this reason, you should use shader_feature for keywords that are set from the Materials, while multi_compile is better for keywords that are set from code globally.
     ```
-----------------------------------------------------------------
 
 ## 34. Multi Variant Shader - part 1
 
+``` shader
+[KeywordEnum(On, Off)] _UseNormal("_UserNormalMap, float) = 0
+
+#pragma shader_feature _USE_NORMAL_ON
+
+#if _USE_NORMAL_ON
+#else
+#endif
+```
+
 ## 35. Multi Variant Shader - part 2
+
+``` shader
+float3 normalFromColor (float4 colorVal)
+{
+    #if defined(UNITY_NO_DXT5nm)
+        return colorVal.xyz * 2 - 1;
+    #else
+        // R => x => A
+        // G => y
+        // B => z => ignored
+
+        float3 normalVal;
+        normalVal = float3 (
+            colorVal.a * 2.0 - 1.0,
+            colorVal.g * 2.0 - 1.0,
+            0.0
+        );
+        normalVal.z = sqrt(1.0 - dot(normalVal, normalVal));
+        return normalVal;
+    #endif
+}
+
+float3 WorldNormalFromNormalMap(sampler2D normalMap, float2 normalTexCoord, float3 tangentWorld, float3 binormalWorld, float3 normalWorld)
+{
+    // Color at Pixel which we read from Tangent space normal map
+    float4 colorAtPixel = tex2D(normalMap, normalTexCoord);
+
+    // Normal value converted from Color value
+    float3 normalAtPixel = normalFromColor(colorAtPixel);
+
+    // Compose TBN matrix
+    float3x3 TBNWorld = float3x3(tangentWorld, binormalWorld, normalWorld);
+    return normalize(mul(normalAtPixel, TBNWorld));
+}
+```
 
 ## 36. Basic Lighting Model and Rendering Path - part 1
 
@@ -907,13 +951,14 @@ Pass {
 - 1 per pixel additional light
 
 ``` ref
-ex) directional 라이트랑 point 라이트가 있으면,
-directional light에는 forward base로 point light에는 forward add로 두가지 패스를 작성해야 한다.
+directional 라이트랑 point 라이트가 있으면,
+directional light에는 forward base로
+point light에는 forward add로 두가지 패스를 작성해야 한다.
 ```
 
-## Legacy Deferred Lighting
+### Legacy Deferred Lighting
 
-- https://docs.unity3d.com/Manual/RenderTech-DeferredLighting.html
+- <https://docs.unity3d.com/Manual/RenderTech-DeferredLighting.html>
 
 1. 씬을 `Geometry Buffer`에 렌더링한다.(보여지는 각 픽셀의 depth, normal, specular power)
 2. Light Accumulation
@@ -924,9 +969,9 @@ directional light에는 forward base로 point light에는 forward add로 두가�
 3. 씬을 다시 렌더링 한다.
     - Accumulated light value + Mesh color + Ambient or Emissive light
 
+### Deferred Shading
 
-## Deferred Shading
-- https://docs.unity3d.com/Manual/RenderTech-DeferredShading.html
+- <https://docs.unity3d.com/Manual/RenderTech-DeferredShading.html>
 
 1. 씬을 `Geometry Buffer(g-buffer)`에 렌더링한다.
     - depth
@@ -943,11 +988,11 @@ directional light에는 forward base로 point light에는 forward add로 두가�
     - accumulated-light value와 diffuse color + spec + emission를 합친다.
 
 - deferred shading vs deferred lighting
-    - deferred shading에서는 씬을 다시 렌더링 하지 않아도 된다.(이미 지오메트리 버퍼에 저장했기때문에)
+  - deferred shading에서는 씬을 다시 렌더링 하지 않아도 된다.(이미 지오메트리 버퍼에 저장했기때문에)
 - Unity requirement for deferred shading
-    - Graphic Card with multiple render target
-    - Support Shader Model 3 or later
-    - Support for Depth-Render Texture
+  - Graphic Card with multiple render target
+  - Support Shader Model 3 or later
+  - Support for Depth-Render Texture
 
 ## 38. Diffuse Reflection - intro
 
@@ -957,68 +1002,37 @@ directional light에는 forward base로 point light에는 forward add로 두가�
 
 ## 41. Diffuse Reflection - code 3
 
-- lambert cosine law
-    - light in reflected off a surface based on cosine-fall off.
+- 요한 하인리히 램버트 (Johann Heinrich Lambert)
+- 램버트의 법칙을 만족하는 표면을 램버시안 (Lambertian)이라 함.
+- 램버트 코사인 법칙(lambert's cosine law)
+  - light in reflected off a surface based on cosine-fall off.
+- Fowrad Rendering 기반으로
+  - 씬에 하나 이상의 라이트가 있다면, 하나의 가장 밝은 directional light가 Base Pass에 사용.
+  - 다른 라이트들은 Spherical Harmonics로 간주.
 
-- Fowrad Rendering기반으로
-    - 씬에 하나 이상의 라이트가 있다면, 하나의 가장 밝은 directional light가 Base Pass에 사용.
-    - 다른 라이트들은 Spherical Harmonics로 간주.
+``` ref
+벡터 L와 N의 사이각을 x라 했을때, 내적값은(내적은 교환법칙 성립)
 
-![Row_and_column_major_order](res/Row_and_column_major_order.svg)
+dot(L, N) = |L| * |N| * cos(x)
 
-~~~
+L, N이 단위백터일때 |L|, |N|는 1.
 
-N x 1 matrix : column vector
-1 x N matrix : row vector
+cos(x) = dot(L, N)
 
-그러나 D3DX 는 row-major 행렬을 사용하고 OpenGL은 column-major
+따라서 lambert 값은
 
-https://docs.microsoft.com/en-us/windows/win32/dxmath/pg-xnamath-getting-started?redirectedfrom=MSDN#matrix_convention
-Direct3D has historically used left-handed coordinate system, row-major matrices, row vectors
+lambert = cos(x)
+        = dot(L, N)
+```
 
-HLSL shaders default to consuming column-major matrices
+VS에서 lambert값을 구하면 보간값을 이용하기에, PS에서 lambert구한 것과의 차이가 있다.
 
+----------------------------------------------------------------
+## 42. Specular Reflection - intro
 
-https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-per-component-math
-Matrix packing order for uniform parameters is set to column-major by default
- #pragmapack_matrix directive, or with the row_major or the column_major keyword.
+## 43. Specular Reflection - code 1
 
-
-
-Row-Major
-mul(v, TranslateMatrix) = float4
-            | 1 0 0 0 |
-| 1 2 3 1 | | 0 1 0 0 | = | (1 + 5) 2 3 1 |
-            | 0 0 1 0 |
-            | 5 0 0 1 |
-
-
-Colum-Major
-mul(v, TranslateMatrix) = float4
-
-            | 1 0 0 5 |
-| 1 2 3 1 | | 0 1 0 0 | = | 1 2 3 (5 + 1) |
-            | 0 0 1 0 |
-            | 0 0 0 1 |
-
-mul(TranslateMatrix, v) = float4
-
-| 1 0 0 5 | | 1 |   | 1 + 5 |
-| 0 1 0 0 | | 2 | = | 2     |
-| 0 0 1 0 | | 3 |   | 3     |
-| 0 0 0 1 | | 1 |   | 1     |
-
-
-동일한 float4이라도 순서에 따라 값이 다르다.
-
-v.tangent.ObjectToWorld 처럼 메소드 방식으로 생각하지 말고,
-ObjectToWorld(v.tangent)처럼 함수형 방식으로 생각하면 순서 햇갈리지 않을듯.
-~~~
-
-
-# 42. Specular Reflection - intro
-# 43. Specular Reflection - code 1
-# 44. Specular Reflection - code 2
+## 44. Specular Reflection - code 2
 
 ~~~
 N: Normal
@@ -1043,11 +1057,11 @@ Blinn-Phong Reflection Model : max(0, (N.H))^S
 - Normal
 - 뷰포트/눈의 각도/방향
 
-* tex2D, tex2Dlod
-    - https://docs.microsoft.com/en-us/windows/desktop/direct3dhlsl/dx-graphics-hlsl-tex2d
-    - https://docs.microsoft.com/en-us/windows/desktop/direct3dhlsl/dx-graphics-hlsl-tex2dlod
-    - https://docs.unity3d.com/Manual/SL-PlatformDifferences.html
-    - https://docs.unity3d.com/Manual/SL-ShaderCompileTargets.html
+- tex2D, tex2Dlod
+  - <https://docs.microsoft.com/en-us/windows/desktop/direct3dhlsl/dx-graphics-hlsl-tex2d>
+  - <https://docs.microsoft.com/en-us/windows/desktop/direct3dhlsl/dx-graphics-hlsl-tex2dlod>
+  - <https://docs.unity3d.com/Manual/SL-PlatformDifferences.html>
+  - <https://docs.unity3d.com/Manual/SL-ShaderCompileTargets.html>
 
 ``` cg
 // tex2D - pixel shader only
