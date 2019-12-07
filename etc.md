@@ -34,7 +34,6 @@ Y
 
 ## Column Major vs Row Major
 
-
 ![Row_and_column_major_order](res/Row_and_column_major_order.svg)
 
 ``` ref
@@ -186,3 +185,20 @@ shader에서 AGB로 접근하여 샘플링하면 상당히 괜찮은 결과를 �
 
 갠적으론 gooch + depth 기반 PS선따기 원츄! ㅡ_ㅡb
 ```
+
+## TODO
+
+- [white noise](https://www.ronja-tutorials.com/2018/09/02/white-noise.html)
+- [날아다니는 나비 만들기](https://holdimprovae.blogspot.com/2019/02/studyunityshader.html)
+- [Hbao Plus Analysis 0](https://hrmrzizon.github.io/2017/11/15/hbao-plus-analysis-0/)
+- [한정현 컴퓨터그래픽스 (11장- 오일러 변환 및 쿼터니언)](https://www.youtube.com/watch?v=XgE7tOSc7AU&list=PLYEC1V9tJOl03WLDoUEKbiYW_Xt4W6LTl&index=12)
+- [Gooch shading](https://en.wikipedia.org/wiki/Gooch_shading)
+
+- https://docs.unity3d.com/Manual/SL-DataTypesAndPrecision.html
+- https://docs.unity3d.com/Manual/SL-ShaderPerformance.html
+
+# mipmap
+- [유니티에서의 텍스쳐 밉맵과 필터링 (Texture Mipmap & filtering in Unity)](https://ozlael.tistory.com/45)
+    - 텍스쳐에서 밉맵이란 텍스쳐에게 있어서 LOD같은 개념입니다
+
+- [tex2Dlod와 tex2Dbias의 비교연구](https://chulin28ho.tistory.com/258)

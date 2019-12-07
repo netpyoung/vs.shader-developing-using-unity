@@ -143,7 +143,7 @@ Shader "ShaderName"
 ![model_to_world_to_camera](res/opengl/model_to_world_to_camera.png)
 ![model_to_world_to_camera_to_homogeneous](res/opengl/model_to_world_to_camera_to_homogeneous.png)
 
-![좌표계]
+![coordinate_systems](res/coordinate_systems.png)
 
 |                   |      |                          |
 | ----------------- | ---- | ------------------------ |
@@ -478,6 +478,7 @@ ZTest
 ## 22. Rendering Pipeline - part 2
 
 - <https://docs.unity3d.com/Manual/SL-CullAndDepth.html>
+- [5강 알파와알파소팅](https://www.slideshare.net/jpcorp/5-10351002)
 
 |        |                                       |                                                                                                    |
 | ------ | ------------------------------------- | -------------------------------------------------------------------------------------------------- |
@@ -1108,19 +1109,17 @@ float4 specularMap = tex2Dlod(_SpecularMap, o.texcoord);
 
 ## 47. Wrap up Basic Lighting Model
 
-## 48_Advanced Lighting Model
+## 48. Advanced Lighting Model
 
 - Shadow
 - Inter Object interaction
 - Energy Balance
   - Energy balanced shading model
 
-----------------------------------------------------------------
-
-## 49_Hemispherical Lighting Model
+## 49. Hemispherical Lighting Model
 
 - 오브젝트는 구의 센터에  빛의 방향이 구의 바깥에서 안쪽으로 비춘다 가정.
-- Hemispherical Lighting Model
+- Hemispherical(반구형) Lighting Model
   - 2 half sphere
 
 |       |        |          |
@@ -1128,33 +1127,37 @@ float4 specularMap = tex2Dlod(_SpecularMap, o.texcoord);
 | upper | sky    | N.L > 0  |
 | lower | ground | N.L <= 0 |
 
-## 50_Image Based Lighting
+![hemispherical](res/hemispherical.jpg)
 
-- 많은 라이트를 실시간 계산하기에는 무리
+## 50. Image Based Lighting
+
+많은 라이트를 실시간 계산하기에는 무리
+
 - light정보를 텍스쳐에 저장
+  - Chrome ball
+    - 눈에 가급적 많은 구역을 담을 수 있도록 카메라를 멀리 배치
+    - 맵에 크롬볼(chrome ball)을 배치(눈에 보이는 방향으로부터 모든 라이트 정보를 저장) - 이러한 크롬볼을 light probe라 함.
+  - Fish eye lens
+    - 185도까지 캡쳐 가능한 렌즈가 있음.
+    - 2개로 묶어 360도를 캡쳐. 환경맵을 만듬.
 - light probe로부터 환경맵(sphere, cube)을 제작
 - 환경 맵으로부터 light계산
 
-light정보를 텍스쳐에 저장하는 기법에는 여러가지 테크닉이 있음.
+----------------------------------------------------------------
 
-### Chrome ball
+## 51. Irradiance Environment Map
 
-- 눈에 가급적 많은 구역을 담을 수 있도록 카메라를 멀리 배치
-- 맵에 크롬볼(chrome ball)을 배치(눈에 보이는 방향으로부터 모든 라이트 정보를 저장) - 이러한 크롬볼을 light probe라 함.
+환경맵이 수반되는 테크닉: Image Based Rendering
 
-### Fish eye lens
+|            |      |                                    |
+| ---------- | ---- | ---------------------------------- |
+| Irradiance | 방사조도 | 무언가로부터 나오는 빛의 양을 나타내는 단위)          |
+| Radiance   | 복사휘도 | 빛의 표면의 단위면적당 방출된 에너지(단위 시간당 특정 방향) |
+| Irradiance | 복사조도 | 받은 에너지(단위 면적)                      |
 
-- 185도까지 캡쳐 가능한 렌즈가 있음.
-- 2개로 묶어 360도를 캡쳐. 환경맵을 만듬.
-
-## 51_Irradiance Environment Map
-
-- Irradiance - 방사 조도(무엇에서 나오는 빛의 양을 나타내는 단위)
-- 기존 환경맵 특정 노멀, 특정 빛의 방향을 저장함 => 오브젝트를 회전하거나 이동시킬 수 없음.
-
-- 맵에 빛을 반사시킬 구를 가져다 놓고, 모든 빛에 대해 반사된 값을 Irradiance Environment Map에 저장.
-  - 미리 diffuse를 계산하여 Irradiance 환경맵에 저장.
-- 렌더링할때에는, 어떠한 물체의 노말값을, 환경맵을 구었을 때의 구의 노말값이라고 가정하고, 미리 구어둔 맵의 값을 가져옴.
+- 맵에 빛을 반사시킬 구를 가져다 놓고, 미리 diffuse를 계산하여 환경맵
+- 렌더링할때에는
+  - 어떠한 물체의 노말값을, 환경맵을 구었을 때의 구의 노말값이라고 가정하고, 미리 구어둔 맵의 값을 가져옴.
   - 그때 쓰는 함수가 texCube임.
   - `color = texCube(Irradiance-Environment-Map, normal)`
 - 단점은, 거리정보가 없기에, 빛의 거리정보가 없기에 따른 감쇠를 표현할 수 없음.
@@ -1180,7 +1183,7 @@ foreach (irr_texel in irradiance_map.texels)
 }
 ```
 
-## 52_Image Based Reflection_intro
+## 52. Image Based Reflection - intro
 
 IBL(Image Based Lighting)-Reflection
 
@@ -1195,16 +1198,24 @@ IBL(Image Based Lighting)-Reflection
 
 - texCUBElod(cubeMap, xyzw) (xyz - normal direction, w - detail(max: 1))
 
-## 55_Image Based Refraction_intro1
+## 53. Image Based Reflection - code 1
+
+## 54. Image Based Reflection - code 2
+
+## 55. Image Based Refraction - intro1
 
 - 매질에 따라 direction / speed가 달라짐.
 
 - 굴절률(index of refraction)
 - 굴절률 n = 진공속에서의 빛의 속도 / 매질 내에서 빛의 속도
 
-## 56. 굴절 구하는 공식
+## 56. Image Based Refraction - intro 2
+
+## 57. Image Based Refraction - code
 
 ## 58. Image Based Fresnel - intro
+
+## 59. Image Based Fresnel - code 1 
 
 ## 61. Coordinate Spaces
 
@@ -1212,10 +1223,17 @@ IBL(Image Based Lighting)-Reflection
 
 ## 63. Shadow Mapping - intro
 
+## 64. Shadow Mapping - code
+
+## 65. Shadow Mapping - Glsl Compatible
+
 ## 66. BRDF - intro
 
 ``` ref
-BRDF 는 "Bidirectional Reflectance Distribution Function" 의 머리글자입니다. 우리 말로는 "양방향 반사율 분포 함수"입니다. 이 BRDF 는 Diffuse BRDF 와 Specular BRDF 로 나뉩니다.
+BRDF 는 "Bidirectional Reflectance Distribution Function" 의 머리글자입니다.
+우리 말로는 "양방향 반사율 분포 함수"입니다.
+이 BRDF 는 Diffuse BRDF 와 Specular BRDF 로 나뉩니다.
+
 출처: https://lifeisforu.tistory.com/386 [그냥 그런 블로그]
 ```
 
@@ -1225,41 +1243,8 @@ BRDF - ex) 뷰 방향과 라이트 방향으로부터, 불투명한 표면에 �
 
 ## 68. BRDF - Anisotropy - intro
 
-## TODO
+## 69. BRDF - Anisotropy - code 1
 
-- [white noise](https://www.ronja-tutorials.com/2018/09/02/white-noise.html)
-- [날아다니는 나비 만들기](https://holdimprovae.blogspot.com/2019/02/studyunityshader.html)
-- [Hbao Plus Analysis 0](https://hrmrzizon.github.io/2017/11/15/hbao-plus-analysis-0/)
-- [한정현 컴퓨터그래픽스 (11장- 오일러 변환 및 쿼터니언)](https://www.youtube.com/watch?v=XgE7tOSc7AU&list=PLYEC1V9tJOl03WLDoUEKbiYW_Xt4W6LTl&index=12)
-- [한정현 컴퓨터그래픽스 (15장 - 쉐도우 맵)](https://www.youtube.com/watch?v=kCuEtQh91U8&list=PLYEC1V9tJOl03WLDoUEKbiYW_Xt4W6LTl&index=16)
-- [Gooch shading](https://en.wikipedia.org/wiki/Gooch_shading)
+## 70. BRDF - Anisotropy - code 2
 
-- https://docs.unity3d.com/Manual/SL-DataTypesAndPrecision.html
-- https://docs.unity3d.com/Manual/SL-ShaderPerformance.html
-
-# mipmap
-- [유니티에서의 텍스쳐 밉맵과 필터링 (Texture Mipmap & filtering in Unity)](https://ozlael.tistory.com/45)
-    - 텍스쳐에서 밉맵이란 텍스쳐에게 있어서 LOD같은 개념입니다
-
-- [tex2Dlod와 tex2Dbias의 비교연구](https://chulin28ho.tistory.com/258)
-
-# TODO texture
-## ETC2
-- OpenGL 3.0 이상.
-## ASTC(Adaptive Scalable Texture Compression)
-- 손실압축
-- OpenGL 3.2 이상 혹은 OpenGL ES 3.1 + AEP(Android Extension Pack)
-- iOS는 A8 processor를 사용하기 시작하는 기종부터 사용이 가능합니다. iPhone 6, iPad mini 4가 이에 해당합니다.
-- 출처: https://ozlael.tistory.com/84?category=612211 [오즈라엘]
-
-
-
-    ``` ref
-    ZWrite On  ;; 기본값 On, override render Queue (forcing z-order)
-    ZWrite Off
-    ```
-
-https://www.slideshare.net/jpcorp/5-10351002
-
-
-[좌표계]: res/coordinate_systems.png
+## 71. Profiling Shaders using Xcode
