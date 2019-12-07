@@ -1143,8 +1143,6 @@ float4 specularMap = tex2Dlod(_SpecularMap, o.texcoord);
 - light probe로부터 환경맵(sphere, cube)을 제작
 - 환경 맵으로부터 light계산
 
-----------------------------------------------------------------
-
 ## 51. Irradiance Environment Map
 
 환경맵이 수반되는 테크닉: Image Based Rendering
@@ -1155,20 +1153,34 @@ float4 specularMap = tex2Dlod(_SpecularMap, o.texcoord);
 | Radiance   | 복사휘도 | 빛의 표면의 단위면적당 방출된 에너지(단위 시간당 특정 방향) |
 | Irradiance | 복사조도 | 받은 에너지(단위 면적)                      |
 
-- 맵에 빛을 반사시킬 구를 가져다 놓고, 미리 diffuse를 계산하여 환경맵
-- 렌더링할때에는
-  - 어떠한 물체의 노말값을, 환경맵을 구었을 때의 구의 노말값이라고 가정하고, 미리 구어둔 맵의 값을 가져옴.
-  - 그때 쓰는 함수가 texCube임.
-  - `color = texCube(Irradiance-Environment-Map, normal)`
-- 단점은, 거리정보가 없기에, 빛의 거리정보가 없기에 따른 감쇠를 표현할 수 없음.
+``` ref
+texCube - 어떤 텍셀이 노멀 방향과 만나게 되는가.
 
-### Irradiance map
+color = texCube(_Cube_Texture, NormalDirection);
+```
 
-- Irradiance map
-  - 6면체
-  - 각 면마다 4개의 텍셀을 지님
-  - 중심에서 텍셀까지의 방향(노말방향)을 구함
-- Lighting Environment map
+### Environment Map(light)
+
+빛의 정보(위치, 밝기등)을 텍셀에 저장
+
+### LightMap
+
+씬의 모든 미리 계산된 빛의 정보를 텍스쳐에 저장.
+
+- 오브젝트의 N과 빛의 L에 기반하여, 미리 계산하여 저장하였기에
+  - 나중에 오브젝트가 회전하거나 변하게되면 미리 계산한 값과 맞지 않게된다.
+
+### Irradiance Environment Map
+
+환경맵(light)의 모든 텍셀에 대해 dot(N, L)을 구하고 그에 대한 색깔을 Irradiance Environment Map의 텍셀에 저장.
+
+Irradiance Map만들기.
+
+- Irradiance Map의 각 텍셀마다
+  - 센터로부터 텍셀로의 방향(Normal값)을 구하고
+  - Lighting Environment map의 각 텍셀마다
+    - 미리 조명처리된 diffuse값을 가산하고
+  - 계산된 diffuse 값을 Irradiance Map의 텍셀에 저장한다.
 
 ``` csharp
 foreach (irr_texel in irradiance_map.texels)
@@ -1180,29 +1192,57 @@ foreach (irr_texel in irradiance_map.texels)
         L = calculateDirectionFromCenter(light_texel)
         diffuseColor += Vector.Dot(N, L)
     }
+    irr_texel.color = diffuseColor;
 }
+return irradiance_map
 ```
 
 ## 52. Image Based Reflection - intro
 
-IBL(Image Based Lighting)-Reflection
+- IBL-Reflection
+  - IBL(Image Based Lighting)
+  - Reflection: 반사
 
 구형 반사체를 큐브맵 안에 위치시키고, 반사체에서 반사되어 큐브맵에 맏닿은 정보를 저장한다.
 
-- CubeMap
-- Reflection Factor
-- Detail
-- Exposure
+V  : 월드 뷰 방향
+N  : 월드 오브젝트의 표면 Normal
+VR : 월드 뷰 방향의 반사 방향
 
-### texCUBElod  - LOD는 (level of detail)를 의미.
+``` ref
+texCUBElod  - LOD는 (level of detail)를 의미.
 
-- texCUBElod(cubeMap, xyzw) (xyz - normal direction, w - detail(max: 1))
+texel = texCUBElod(cubeMap, VR.xyzw);
+
+xyz : direction
+w   : detail(max: 1)
+```
 
 ## 53. Image Based Reflection - code 1
 
+``` shader
+float3 IBL_Reflection(
+    samplerCUBE cubeMap,
+    half detail,
+    float3 worldRefl,
+    float exposure,
+    float reflectionFactor)
+{
+    float4 cubeMapCol = texCUBElod(cubeMap, float4(worldRefl, detail));
+    return reflectionFactor * cubeMapCol.rgb * (cubeMapCol.a * exposure);
+}
+```
+
 ## 54. Image Based Reflection - code 2
 
+----------------------------------------------------------------
+
+
 ## 55. Image Based Refraction - intro1
+
+- IBL-Refraction
+  - IBL(Image Based Lighting)
+  - Refraction: 굴절
 
 - 매질에 따라 direction / speed가 달라짐.
 
