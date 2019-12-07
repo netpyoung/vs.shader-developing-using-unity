@@ -996,12 +996,6 @@ point light에는 forward add로 두가지 패스를 작성해야 한다.
 
 ## 38. Diffuse Reflection - intro
 
-## 39. Diffuse Reflection - code 1
-
-## 40. Diffuse Reflection - code 2
-
-## 41. Diffuse Reflection - code 3
-
 - 요한 하인리히 램버트 (Johann Heinrich Lambert)
 - 램버트의 법칙을 만족하는 표면을 램버시안 (Lambertian)이라 함.
 - 램버트 코사인 법칙(lambert's cosine law)
@@ -1027,19 +1021,33 @@ lambert = cos(x)
 
 VS에서 lambert값을 구하면 보간값을 이용하기에, PS에서 lambert구한 것과의 차이가 있다.
 
-----------------------------------------------------------------
+## 39. Diffuse Reflection - code 1
+
+## 40. Diffuse Reflection - code 2
+
+## 41. Diffuse Reflection - code 3
+
 ## 42. Specular Reflection - intro
+
+![specular_reflection.jpg](res/specular_reflection.jpg)
+
+``` ref
+입사벡터(incident)를 I라 했을때 reflect(I, N)은
+
+R = reflect(I, N)
+  = I - 2 * N * dot(I, N)
+```
 
 ## 43. Specular Reflection - code 1
 
 ## 44. Specular Reflection - code 2
 
-~~~
+``` ref
 N: Normal
 L: Light
 R: Reflect
 V: Viewport
-H: halfway vector - normalize(L + V)
+H: Halfway( normalize(L + V) )
 
 L  N  R
  \ | /
@@ -1049,9 +1057,9 @@ L  N  R
      \
      -L
 
-Phong Reflection Model : max(0, (R.V))^S
-Blinn-Phong Reflection Model : max(0, (N.H))^S
-~~~
+      Phong Reflection Model : max(0, dot(R, N))^S
+Blinn-Phong Reflection Model : max(0, dot(H, N))^S
+```
 
 - 입사광의 각도/방향
 - Normal
@@ -1072,16 +1080,22 @@ Blinn-Phong Reflection Model : max(0, (N.H))^S
 // s.xy : Coordinates to perform the lookup.
 // s.w : Level of detail. (0 ~ n-1) (가장큰)첫번째 밉맵이 0
 
-
 #pragma target 3.0
 float4 specularMap = tex2Dlod(_SpecularMap, o.texcoord);
 ```
 
-* pragma
-    - https://docs.unity3d.com/Manual/SL-ShaderCompileTargets.html
-    - `#pragma target 2.5 (default)`
+- pragma
+  - <https://docs.unity3d.com/Manual/SL-ShaderCompileTargets.html>
+  - `#pragma target 2.5 (default)`
 
 ## 45. Ambient Reflection - intro
+
+``` ref
+ A = ambient property of material * global ambient
+   =                           KA * UNITY_LIGHTMODEL_AMBIENT
+```
+
+- <https://docs.unity3d.com/Manual/SL-UnityShaderVariables.html>
 
 |                          |        |                                                                               |
 | ------------------------ | ------ | ----------------------------------------------------------------------------- |
@@ -1090,12 +1104,18 @@ float4 specularMap = tex2Dlod(_SpecularMap, o.texcoord);
 | unity_AmbientGround      | fixed4 | Ground ambient lighting color in gradient ambient lighting case.              |
 | UNITY_LIGHTMODEL_AMBIENT | fixed4 | Ambient lighting color (sky color in gradient ambient case). Legacy variable. |
 
+## 46. Ambient Reflection - code.mkv
+
+## 47. Wrap up Basic Lighting Model
+
 ## 48_Advanced Lighting Model
 
 - Shadow
 - Inter Object interaction
 - Energy Balance
   - Energy balanced shading model
+
+----------------------------------------------------------------
 
 ## 49_Hemispherical Lighting Model
 
