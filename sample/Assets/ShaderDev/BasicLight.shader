@@ -1,9 +1,4 @@
-﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
-// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
-// Upgrade NOTE: replaced '_World2Object' with 'unity_WorldToObject'
-
-Shader "ShaderDev/47BasicLight"
+﻿Shader "ShaderDev/47BasicLight"
 {
 	Properties 
 	{
@@ -35,7 +30,6 @@ Shader "ShaderDev/47BasicLight"
 			Blend SrcAlpha OneMinusSrcAlpha
 			
 			CGPROGRAM
-			//http://docs.unity3d.com/Manual/SL-ShaderPrograms.html
 			#pragma vertex vert
 			#pragma fragment frag
 			#pragma shader_feature _USENORMAL_OFF _USENORMAL_ON

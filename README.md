@@ -1,5 +1,7 @@
 # ShaderDev
 
+Study log on Chayan Vinayak Goswami's ShaderDev
+
 ## 00
 
 - <https://shaderdev.com/>
@@ -1091,6 +1093,8 @@ float4 specularMap = tex2Dlod(_SpecularMap, o.texcoord);
 
 ## 45. Ambient Reflection - intro
 
+주변(Ambient) 반사광.
+
 ``` ref
  A = ambient property of material * global ambient
    =                           KA * UNITY_LIGHTMODEL_AMBIENT
@@ -1111,14 +1115,18 @@ float4 specularMap = tex2Dlod(_SpecularMap, o.texcoord);
 
 ## 48. Advanced Lighting Model
 
-- Shadow
-- Inter Object interaction
-- Energy Balance
+기본 라이트 모델에는 뭔가 좀 부족하다.
+
+- 그림자(Shadow)
+- 오브젝트간 상호작용(Inter Object interaction)
+- 에너지 균형(Energy Balance)
   - Energy balanced shading model
+
+-------------------------------------------------------
 
 ## 49. Hemispherical Lighting Model
 
-- 오브젝트는 구의 센터에  빛의 방향이 구의 바깥에서 안쪽으로 비춘다 가정.
+- 오브젝트는 구의 센터에 빛의 방향이 구의 바깥에서 안쪽으로 비춘다 가정.
 - Hemispherical(반구형) Lighting Model
   - 2 half sphere
 
@@ -1131,12 +1139,12 @@ float4 specularMap = tex2Dlod(_SpecularMap, o.texcoord);
 
 ## 50. Image Based Lighting
 
-많은 라이트를 실시간 계산하기에는 무리
+많은 라이트를 실시간으로 계산하기에는 무리
 
 - light정보를 텍스쳐에 저장
   - Chrome ball
     - 눈에 가급적 많은 구역을 담을 수 있도록 카메라를 멀리 배치
-    - 맵에 크롬볼(chrome ball)을 배치(눈에 보이는 방향으로부터 모든 라이트 정보를 저장) - 이러한 크롬볼을 light probe라 함.
+    - 맵에 크롬볼(chrome ball)을 배치(눈에 보이는 방향으로부터 모든 라이트 정보를 저장)(이러한 크롬볼을 light probe라 한다) 
   - Fish eye lens
     - 185도까지 캡쳐 가능한 렌즈가 있음.
     - 2개로 묶어 360도를 캡쳐. 환경맵을 만듬.
@@ -1145,11 +1153,12 @@ float4 specularMap = tex2Dlod(_SpecularMap, o.texcoord);
 
 ## 51. Irradiance Environment Map
 
-환경맵이 수반되는 테크닉: Image Based Rendering
+- 복사조도 환경맵
+- Irradiance : 무언가로부터 나오는 빛의 양을 나타내는 단위
+- IBL(Image Based Rendering) : 환경맵이 수반되는 테크닉
 
 |            |      |                                    |
 | ---------- | ---- | ---------------------------------- |
-| Irradiance | 방사조도 | 무언가로부터 나오는 빛의 양을 나타내는 단위)          |
 | Radiance   | 복사휘도 | 빛의 표면의 단위면적당 방출된 에너지(단위 시간당 특정 방향) |
 | Irradiance | 복사조도 | 받은 에너지(단위 면적)                      |
 
@@ -1159,22 +1168,26 @@ texCube - 어떤 텍셀이 노멀 방향과 만나게 되는가.
 color = texCube(_Cube_Texture, NormalDirection);
 ```
 
-### Environment Map(light)
+### Light Environment Ma
 
-빛의 정보(위치, 밝기등)을 텍셀에 저장
+- 빛의 정보(위치, 밝기등)을 텍셀에 저장
 
-### LightMap
+### 1. Light Map
 
-씬의 모든 미리 계산된 빛의 정보를 텍스쳐에 저장.
+오브젝트들의 이미지를 저장.
 
-- 오브젝트의 N과 빛의 L에 기반하여, 미리 계산하여 저장하였기에
-  - 나중에 오브젝트가 회전하거나 변하게되면 미리 계산한 값과 맞지 않게된다.
+- 씬의 모든 미리 계산된 빛의 정보를 텍스쳐에 저장.
+- 오브젝트의 N과 빛의 L에 기반하여, 미리 계산하여 저장하였기에 나중에 오브젝트가 회전하거나 변하게되면 미리 계산한 값과 맞지 않게된다.
 
-### Irradiance Environment Map
+### 2. Irradiance Environment Map
 
-환경맵(light)의 모든 텍셀에 대해 dot(N, L)을 구하고 그에 대한 색깔을 Irradiance Environment Map의 텍셀에 저장.
+월드센터의 구의 N과 환경맵의 L에 대한 diffuse값(dot(N, L))을 저장.
 
-Irradiance Map만들기.
+- 환경맵(light)의 모든 텍셀이, 월드센터에 구가 있다고 가정.
+- 구의 N과 텍셀의 L에 대해 dot(N, L)을 구하고.
+- 그에 대한 색깔을 Irradiance Environment Map의 텍셀에 저장.
+
+#### Irradiance Map만들기.
 
 - Irradiance Map의 각 텍셀마다
   - 센터로부터 텍셀로의 방향(Normal값)을 구하고
@@ -1199,6 +1212,10 @@ return irradiance_map
 
 ## 52. Image Based Reflection - intro
 
+![cubemaps_reflection.png](res/cubemaps_reflection.png)
+
+- image from <https://heinleinsgame.tistory.com/29>
+
 - IBL-Reflection
   - IBL(Image Based Lighting)
   - Reflection: 반사
@@ -1218,44 +1235,116 @@ xyz : direction
 w   : detail(max: 1)
 ```
 
+- [nvidia: texCUBElod](https://developer.download.nvidia.com/cg/texCUBElod.html)
+
 ## 53. Image Based Reflection - code 1
 
 ``` shader
 float3 IBL_Reflection(
     samplerCUBE cubeMap,
-    half detail,
-    float3 worldRefl,
-    float exposure,
-    float reflectionFactor)
+    half        detail,
+    float3      reflect,
+    float       exeposure,
+    float       factor)
 {
-    float4 cubeMapCol = texCUBElod(cubeMap, float4(worldRefl, detail));
-    return reflectionFactor * cubeMapCol.rgb * (cubeMapCol.a * exposure);
+    float4 c = texCUBElod(cubeMap, float4(reflect, detail));
+    return factor * c.rgb * (c.a * exeposure);
 }
 ```
 
 ## 54. Image Based Reflection - code 2
 
-----------------------------------------------------------------
-
-
 ## 55. Image Based Refraction - intro1
+
+![cubemaps_refraction.png](res/cubemaps_refraction.png)
 
 - IBL-Refraction
   - IBL(Image Based Lighting)
   - Refraction: 굴절
 
-- 매질에 따라 direction / speed가 달라짐.
-
-- 굴절률(index of refraction)
-- 굴절률 n = 진공속에서의 빛의 속도 / 매질 내에서 빛의 속도
-
 ## 56. Image Based Refraction - intro 2
+
+유리나 물은 반사와 굴절 모두를 갖는데...
+
+![SnellsLaw.png](res/SnellsLaw.png)
+
+- Snell's law 공식 유도 설명.
+- Willebrord Snellius
+- [nvidia: refract](https://developer.download.nvidia.com/cg/refract.html)
+
+``` shader
+float3 refract(float3 i, float3 n, float eta)
+{
+  float cosi = dot(-i, n);
+  float cost2 = 1.0f - eta * eta * (1.0f - cosi * cosi);
+  float3 t = eta * i + ((eta * cosi - sqrt(abs(cost2))) * n);
+  return t * (float3)(cost2 > 0);
+}
+```
 
 ## 57. Image Based Refraction - code
 
+``` shader
+매질에 대한 반사
+float3 world_reflect_V = reflect(-world_V, world_N);
+
+매질에 대한 굴절
+float3 world_refract_V = refract(-world_V, world_N, 1 / _RefractiveIndex);
+```
+
 ## 58. Image Based Fresnel - intro
 
-## 59. Image Based Fresnel - code 1 
+![fres-01.png](res/fres-01.png)
+
+![fres-02.png](res/fres-02.png)
+
+``` shader
+H    = normalize( V + L )
+spec = pow(saturate(dot(H, N)), power);
+```
+
+Blinn-phong에서는 다음과 같은 그림에서 Half-vector를 이용하기에 반사되는 크기가 계산상 같게 나올것이다. 하지만, 현실에서는 L과 V의 각도가 커지면 반사되어 밝게 빛나는 경우가 있다.
+
+![shot_01.jpg](res/shot_01.jpg)
+
+Fresnel로 림라이트효과와 반사광효과를 흉내낼 수있다.
+
+굴절률이 n1인 매질에서 n2인 매질로 빛이 투과할 때 반사와 굴절이 일어난다. 프레넬 방정식은 이 성질을 반사계수, 투과계수로 나누어 성분을 분석하여 표현한 방정식이다
+
+- [[ PBR 이란 무엇인가 ] 17. Fresnel 이란?](https://lifeisforu.tistory.com/384)
+
+- [CgTutorial: ch7.4](https://developer.download.nvidia.com/CgTutorial/cg_tutorial_chapter07.html)
+
+### [GPUGems3: ch14](https://developer.nvidia.com/gpugems/GPUGems3/gpugems3_ch14.html)
+
+- [wiki: Schlick's approximation](https://en.wikipedia.org/wiki/Schlick%27s_approximation)
+
+``` shader
+// H  is the standard half-angle vector.
+// F0 is reflectance at normal incidence (for skin use 0.028).
+float fresnelReflectance( float3 H, float3 V, float F0 )
+{
+  float base = 1.0 - dot( V, H );
+  float exponential = pow( base, 5.0 );
+  return exponential + F0 * ( 1.0 - exponential );
+}
+```
+
+## 59. Image Based Fresnel - code 1
+
+![lerp](res/lerp.jpg)
+
+- [nvidia: lerp](https://developer.download.nvidia.com/cg/lerp.html)
+
+``` shader
+float fresnel = 1 - saturate(dot(world_V, world_N));
+      fresnel = smoothstep(1 - _FresnelWidth, 1, fresnel);
+finalColor.rgb = lerp(finalColor.rgb, finalColor.rgb * reflColor, fresnel);
+```
+
+## 60. Image Based Fresnel - code 2
+
+----------------------------------------------------------------
 
 ## 61. Coordinate Spaces
 
@@ -1267,7 +1356,11 @@ float3 IBL_Reflection(
 
 ## 65. Shadow Mapping - Glsl Compatible
 
+TODO shadow
+
 ## 66. BRDF - intro
+
+Microfacet Theory
 
 ``` ref
 BRDF 는 "Bidirectional Reflectance Distribution Function" 의 머리글자입니다.
@@ -1288,3 +1381,17 @@ BRDF - ex) 뷰 방향과 라이트 방향으로부터, 불투명한 표면에 �
 ## 70. BRDF - Anisotropy - code 2
 
 ## 71. Profiling Shaders using Xcode
+
+
+``` tex
+s = \sum_{i=0}^{n}\text{intensity}_\text{light i} \times 
+\begin{matrix}
+  \text{specular} \\
+  \text{property} \\
+  \text{of} \\
+  \text{material} \\
+ \end{matrix}
+\times \text{attenuation} \times \max\left(0, ({N} \cdot {H}) \right)^\text{specular power}
+```
+
+[SIGGRAPH University - Introduction to "Physically Based Shading in Theory and Practice"](https://youtu.be/j-A0mwsJRmk)

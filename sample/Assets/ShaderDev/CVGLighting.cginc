@@ -20,7 +20,7 @@ float3 normalFromColor (float4 colorVal)
 	#endif
 }
 			
-float3 WorldNormalFromNormalMap(sampler2D normalMap, float2 normalTexCoord, float3 tangentWorld, float3 binormalWorld, float3 normalWorld)
+float3 WorldNormalFromNormalMap(sampler2D normalMap, float2 normalTexCoord, float3 T, float3 B, float3 N)
 {
 		// Color at Pixel which we read from Tangent space normal map
 		float4 colorAtPixel = tex2D(normalMap, normalTexCoord);
@@ -29,8 +29,8 @@ float3 WorldNormalFromNormalMap(sampler2D normalMap, float2 normalTexCoord, floa
 		float3 normalAtPixel = normalFromColor(colorAtPixel);
 		
 		// Compose TBN matrix
-		float3x3 TBNWorld = float3x3(tangentWorld, binormalWorld, normalWorld);
-		return normalize(mul(normalAtPixel, TBNWorld));	
+		float3x3 world_TBN = float3x3(T, B, N);
+		return normalize(mul(normalAtPixel, world_TBN));	
 }
 
 float3 DiffuseLambert(float3 normalVal, float3 lightDir, float3 lightColor, float diffuseFactor, float attenuation)
@@ -53,12 +53,12 @@ float3 IBLRefl (samplerCUBE cubeMap, half detail, float3 worldRefl, float exposu
 inline float4 ProjectionToTextureSpace(float4 pos)
 {
 	float4 textureSpacePos = pos;
-	#if defined(UNITY_HALF_TEXEL_OFFSET)
-		textureSpacePos.xy = float2 (textureSpacePos.x, textureSpacePos.y * _ProjectionParams.x) + textureSpacePos.w * _ScreenParams.zw;
-	#else
-		textureSpacePos.xy = float2 (textureSpacePos.x, textureSpacePos.y * _ProjectionParams.x) + textureSpacePos.w;
-	#endif
-	textureSpacePos.xy = float2 (textureSpacePos.x/textureSpacePos.w, textureSpacePos.y/textureSpacePos.w) * 0.5f;
+	// #if defined(UNITY_HALF_TEXEL_OFFSET)
+	// 	textureSpacePos.xy = float2 (textureSpacePos.x, textureSpacePos.y * _ProjectionParams.x) + textureSpacePos.w * _ScreenParams.zw;
+	// #else
+	// 	textureSpacePos.xy = float2 (textureSpacePos.x, textureSpacePos.y * _ProjectionParams.x) + textureSpacePos.w;
+	// #endif
+	// textureSpacePos.xy = float2 (textureSpacePos.x/textureSpacePos.w, textureSpacePos.y/textureSpacePos.w) * 0.5f;
 	return textureSpacePos;
 
 }
