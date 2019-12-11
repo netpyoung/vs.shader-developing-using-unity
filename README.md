@@ -1122,8 +1122,6 @@ float4 specularMap = tex2Dlod(_SpecularMap, o.texcoord);
 - 에너지 균형(Energy Balance)
   - Energy balanced shading model
 
--------------------------------------------------------
-
 ## 49. Hemispherical Lighting Model
 
 - 오브젝트는 구의 센터에 빛의 방향이 구의 바깥에서 안쪽으로 비춘다 가정.
@@ -1156,11 +1154,6 @@ float4 specularMap = tex2Dlod(_SpecularMap, o.texcoord);
 - 복사조도 환경맵
 - Irradiance : 무언가로부터 나오는 빛의 양을 나타내는 단위
 - IBL(Image Based Rendering) : 환경맵이 수반되는 테크닉
-
-|            |      |                                    |
-| ---------- | ---- | ---------------------------------- |
-| Radiance   | 복사휘도 | 빛의 표면의 단위면적당 방출된 에너지(단위 시간당 특정 방향) |
-| Irradiance | 복사조도 | 받은 에너지(단위 면적)                      |
 
 ``` ref
 texCube - 어떤 텍셀이 노멀 방향과 만나게 되는가.
@@ -1344,23 +1337,126 @@ finalColor.rgb = lerp(finalColor.rgb, finalColor.rgb * reflColor, fresnel);
 
 ## 60. Image Based Fresnel - code 2
 
-----------------------------------------------------------------
-
 ## 61. Coordinate Spaces
 
 ## 62. Transforming Coordinate Spaces
 
+``` ref
+NDC(Normalized Device Coordinate) [-1, 1]
+-1,  1                1,  1
+  +--------------------+
+  |                    |
+  |                    |
+  |       0,0          |
+  |                    |
+  |                    |
+  +--------------------+
+-1, -1                1, -1
+
+
+Texture Coord [0, 1]
+D3D
+(0,0)        (1,0)
+  +-----+-----+
+  |     |     |
+  |     |     |
+  +-----+-----+
+  |     |     |
+  |     |     |
+  +-----+-----+
+(0,1)        (1,1)
+
+
+OpenGL
+
+(0,1)        (1,1)
+  +-----+-----+
+  |     |     |
+  |     |     |
+  +-----+-----+
+  |     |     |
+  |     |     |
+  +-----+-----+
+(0,0)        (1,0)
+
+[-1, 1] => [0, 1] = (NDC + 1) / 2
+
+NDC.x = proj_X / proj_W = x / w
+U = (x / w + 1) * 0.5
+  = (x + w) / w * 0.5
+  = (1 / w) * (x + w)  * 0.5
+V = (1 / w) * (y + w)  * 0.5
+```
+
+
+_ProjectionParams.x : -1 TopLeft    D3D
+                       1 BottomLeft Opengl
+
+UNITY_HALF_TEXEL_OFFSET
+-ScreenParams.zw
+
+``` shader
+inline float4 ProjectionToTextureSpace(float4 pos)
+{
+    float4 textureSpacePos = pos;
+    #if defined(UNITY_HALF_TEXEL_OFFSET)
+        textureSpacePos.xy = float2 (textureSpacePos.x, textureSpacePos.y * _ProjectionParams.x) + textureSpacePos.w * _ScreenParams.zw;
+    #else
+        textureSpacePos.xy = float2 (textureSpacePos.x, textureSpacePos.y * _ProjectionParams.x) + textureSpacePos.w;
+    #endif
+    textureSpacePos.xy = float2 (textureSpacePos.x/textureSpacePos.w, textureSpacePos.y/textureSpacePos.w) * 0.5f;
+    return textureSpacePos;
+}
+```
+
 ## 63. Shadow Mapping - intro
+
+Tag {"LightMode" = "ShadowCaster"} => _ShadowMapTexture
 
 ## 64. Shadow Mapping - code
 
 ## 65. Shadow Mapping - Glsl Compatible
 
-TODO shadow
+``` shader
+#pragma multi_compile_fwdbase
+
+#if _SHADOWMODE_ON
+    #if defined(SHADER_API_D3D11) || defined(SHADER_API_D3D11_9X) || defined(UNITY_COMPILER_HLSLCC)
+        Texture2D _ShadowMapTexture;
+        SamplerComparisonState sampler_ShadowMapTexture;
+    #elif defined(SHADER_TARGET_GLSL)
+        sampler2DShadow _ShadowMapTexture;
+    #else
+        sampler2D _ShadowMapTexture;
+    #endif
+#endif
+
+#if _SHADOWMODE_ON
+    // 에디터는 cascading shadows를 사용. 모바일 플렛폼은 사용하지 않음.
+    #if defined(UNITY_NO_SCREENSPACE_SHADOWS)
+        o.shadowCoord = mul(unity_WorldToShadow[0], o.posWorld);
+    #else
+        o.shadowCoord = ProjectionToTextureSpace(o.pos);
+    #endif
+#endif
+
+#if _SHADOWMODE_ON
+    #if defined(SHADER_TARGET_GLSL)
+        float shadow =  shadow2D(_ShadowMapTexture, i.shadowCoord);
+    #else
+        // Factor in shadow strength using _LightShadowData.r
+        #if defined(SHADER_API_D3D11) || defined(SHADER_API_D3D11_9X) || defined(UNITY_COMPILER_HLSLCC)
+            float shadow = (_ShadowMapTexture.SampleCmpLevelZero (sampler_ShadowMapTexture, i.shadowCoord.xy, i.shadowCoord.z)? 1.0 : _LightShadowData.r);
+        #elif defined(UNITY_NO_SCREENSPACE_SHADOWS)
+            float shadow = ((tex2D(_ShadowMapTexture, i.shadowCoord.xy).r < i.shadowCoord.z) ? 1.0 : _LightShadowData.r);
+        #else
+            float shadow = tex2D(_ShadowMapTexture, i.shadowCoord).a;
+        #endif
+    #endif
+#endif
+```
 
 ## 66. BRDF - intro
-
-Microfacet Theory
 
 ``` ref
 BRDF 는 "Bidirectional Reflectance Distribution Function" 의 머리글자입니다.
@@ -1372,26 +1468,93 @@ BRDF 는 "Bidirectional Reflectance Distribution Function" 의 머리글자입�
 
 BRDF - ex) 뷰 방향과 라이트 방향으로부터, 불투명한 표면에 반사되는 방식을 구함.
 
+``` ref
+특정방향(눈 혹은 카메라              )으로     반사된 빛의 양
+-------------------------------------------------------------
+특정방향(특정포인터로부터의 빛의 방향)으로부터 도달한 빛의 양
+    Radiance
+= -------------
+    Irradiance
+
+
+BRDF
+    반사된 빛의 양
+= --------------------
+    Li * 면적 x Cos
+
+  등방성(  isotropic): 반사도가 표면이 향하는 방향이나 회전에 의해 변하지 않음.
+비등방성(anisotropic): 반사도가 표면이 향하는 방향이나 회전에 의해 변함.
+```
+
+Microfacet Theory
+
+
+|            |      |                                    |
+| ---------- | ---- | ---------------------------------- |
+| Radiance   | 복사휘도 | 빛의 표면의 단위면적당 방출된 에너지(단위 시간당 특정 방향) |
+| Irradiance | 복사조도 | 받은 에너지(단위 면적)                      |
+
 ## 67. BRDF - Spherical Coordinate System
 
+![brdf](res/brdf.jpg)
+
+구면좌표 : $[r, \theta, \varphi]$
+
+$\theta$ : z축으로부터 각도
+$\varphi$: yx평면으로 투영된 벡터로부터 +x축으로의 각도
+
+상반성 reciprocity
+
 ## 68. BRDF - Anisotropy - intro
+
+- Ashikhimin-Shirley && Ashikhimin-Premoze
+  - Ashikhimin-Shirley제안 Ashikhimin-Premoze에 의해 수정
+
+``` ref
+H = Halfway
+T = Tangent
+B = Bitangent
+```
+
+${\sqrt{(n_u+1) + (n_v+1)} (N \cdotp H)^{ N_u(H \cdot T) + n_v(H \cdot B)^2 \over 1 -(N \cdot H)^2} \over 8_\pi \cdot (V \cdotp H) \cdot max((N \cdotp L), (N \cdotp V)) } \cdot FrennelTerm$
+
+$F = (reflect + (1 - reflect) \cdot (1 - (V . H))^5)$
+
+![Ashikhimin_shirley_premoze](res/Ashikhimin_shirley_premoze.jpg)
 
 ## 69. BRDF - Anisotropy - code 1
 
 ## 70. BRDF - Anisotropy - code 2
 
-## 71. Profiling Shaders using Xcode
+``` shader
+float AshikhminShirleyPremoze_BRDF(float nU, float nV, float3 tangentDir, float3 normalDir, float3 lightDir, float3 viewDir, float reflectionFactor)
+{
+    float pi = 3.141592;
+    float3 halfwayVector = normalize(lightDir + viewDir);
+    float3 NdotH = dot(normalDir, halfwayVector);
+    float3 NdotL = dot(normalDir, lightDir);
+    float3 NdotV = dot(normalDir, viewDir);
+    float3 HdotT = dot(halfwayVector, tangentDir);
+    float3 HdotB = dot(halfwayVector, cross(tangentDir, normalDir));
+    float3 VdotH = dot(viewDir, halfwayVector);
 
+    float power = nU * pow(HdotT,2) + nV * pow(HdotB,2);
+    power /= 1.0 - pow(NdotH,2);
 
-``` tex
-s = \sum_{i=0}^{n}\text{intensity}_\text{light i} \times 
-\begin{matrix}
-  \text{specular} \\
-  \text{property} \\
-  \text{of} \\
-  \text{material} \\
- \end{matrix}
-\times \text{attenuation} \times \max\left(0, ({N} \cdot {H}) \right)^\text{specular power}
+    float spec = sqrt((nU + 1) * (nV + 1)) * pow(NdotH, power);
+    spec /= 8.0 * pi * VdotH * max(NdotL, NdotV);
+
+    float Fresnel = reflectionFactor + (1.0 - reflectionFactor) * pow(1.0 - VdotH, 5.0);
+    spec *= Fresnel;
+    return spec;
+}
+
+float4 tangentMap = tex2D(_TangentMap, o.texcoord.xy);
+float3 specular = AshikhminShirleyPremoze_BRDF(_AnisoU, _AnisoV, tangentMap.xyz, o.normal, lightDir, worldViewDir, _ReflectionFactor);
 ```
 
-[SIGGRAPH University - Introduction to "Physically Based Shading in Theory and Practice"](https://youtu.be/j-A0mwsJRmk)
+## 71. Profiling Shaders using Xcode
+
+Xcode 디버그
+=> 카메라버튼
+=> RenderCommandEncoder 더블클릭

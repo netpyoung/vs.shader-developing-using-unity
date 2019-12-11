@@ -9,7 +9,7 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: statue_mat
   m_Shader: {fileID: 4800000, guid: 033dd97bbd222374e97370942e5f7ee4, type: 3}
-  m_ShaderKeywords: _LIGHTING_OFF _USENORMAL_ON
+  m_ShaderKeywords: _LIGHTING_FRAG _USENORMAL_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -68,7 +68,7 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _Lighting: 0
+    - _Lighting: 2
     - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1
