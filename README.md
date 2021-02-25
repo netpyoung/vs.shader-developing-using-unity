@@ -477,11 +477,10 @@ sin / cos 함수와 _Time변수를 이용한 에니에미션.
 - 깃발의 vertex position을 sin으로 흔들고 중심점 위치 보정.
 
 ``` hlsl
-half4 VertexFlagAnim(half4 p, half2 uv)
+half3 VertexFlagAnim(half3 positionOS, half2 uv)
 {
-    p.z += sin((uv.x - (_Time.y * _Speed)) * _Frequency)
-    p.z *= (uv.x *_Amplitude);
-    return p;
+    positionOS.z += sin((uv.x - (_Time.y * _FlagSpeed)) * _FlagFrequency) * (uv.x * _FlagAmplitude);
+    return positionOS;
 }
 ```
 
@@ -494,11 +493,11 @@ half4 VertexFlagAnim(half4 p, half2 uv)
 
 ## 20. Normal-Vertex Animation
 
-``` shader
-float4 vertexAnimNormal(float4 p, float4 normal)
+``` hlsl
+half3 VertexAnimNormal(half3 positionOS, half3 normalOS, half2 uv)
 {
-    p.z += sin((normal - (_Time.y * _Speed)) * _Frequency) * (normal *_Amplitude);
-    return p;
+    positionOS += sin((normalOS - (_Time.y * _Speed)) * _Frequency) * (normalOS * _Amplitude);
+    return positionOS;
 }
 ```
 
@@ -611,7 +610,7 @@ TBN = | Tx Ty Tz | // Tangent  | U
 - 교환법칙이 성립
 
 ``` ref
-| 각도   | 값   |
+| 각도 | 값  |
 | ---- | --- |
 | 0    | 1   |
 | 90   | 0   |
@@ -682,6 +681,61 @@ mul(M_want, v) == mul( transpose( unity_World2Object ), V )
                == mul(                               V, unity_World2Object )
 ```
 
+``` hlsl
+inline void ExtractTBN(in half3 normalOS, in float4 tangent, inout half3 T, inout half3  B, inout half3 N)
+{
+    N = TransformObjectToWorldNormal(normalOS);
+    T = TransformObjectToWorldDir(tangent.xyz);
+    B = cross(N, T) * tangent.w * unity_WorldTransformParams.w;
+}
+
+inline half3 CombineTBN(in half3 tangentNormal, in half3 T, in half3  B, in half3 N)
+{
+    return mul(tangentNormal, float3x3(normalize(T), normalize(B), normalize(N)));
+}
+```
+
+``` hlsl
+float3x3 tangentToWorld = CreateTangentToWorld(unnormalizedNormalWS, tangentWS.xyz, tangentWS.w > 0.0 ? 1.0 : -1.0);
+
+// com.unity.render-pipelines.core/ShaderLibrary/SpaceTransforms.hlsl
+real3x3 CreateTangentToWorld(real3 normal, real3 tangent, real flipSign)
+{
+    // For odd-negative scale transforms we need to flip the sign
+    real sgn = flipSign * GetOddNegativeScale();
+    real3 bitangent = cross(normal, tangent) * sgn;
+
+    return real3x3(tangent, bitangent, normal);
+}
+
+float3 TransformObjectToWorldNormal(float3 normalOS, bool doNormalize = true)
+{
+#ifdef UNITY_ASSUME_UNIFORM_SCALING
+    return TransformObjectToWorldDir(normalOS, doNormalize);
+#else
+    // Normal need to be multiply by inverse transpose
+    float3 normalWS = mul(normalOS, (float3x3)GetWorldToObjectMatrix());
+    if (doNormalize)
+        return SafeNormalize(normalWS);
+
+    return normalWS;
+#endif
+}
+
+float3 TransformObjectToWorldDir(float3 dirOS, bool doNormalize = true)
+{
+    #ifndef SHADER_STAGE_RAY_TRACING
+    float3 dirWS = mul((float3x3)GetObjectToWorldMatrix(), dirOS);
+    #else
+    float3 dirWS = mul((float3x3)ObjectToWorld3x4(), dirOS);
+    #endif
+    if (doNormalize)
+        return SafeNormalize(dirWS);
+
+    return dirWS;
+}
+```
+
 ![normal-1](res/normal-1.png)
 
 ![normal-2](res/normal-2.png)
@@ -726,6 +780,39 @@ XYZ가 normalize 되었다면, X와 Y만 알아도 Z를 구할 수 있다.
 
 1 = (X * X) + (Y * Y) + (Z * Z)
 Z = sqrt(1 - ((X * X) + (Y * Y)))
+```
+
+``` hlsl
+// com.unity.render-pipelines.core/ShaderLibrary/Packing.hlsl
+
+real3 UnpackNormal(real4 packedNormal)
+{
+#if defined(UNITY_ASTC_NORMALMAP_ENCODING)
+    return UnpackNormalAG(packedNormal, 1.0);
+#elif defined(UNITY_NO_DXT5nm)
+    return UnpackNormalRGBNoScale(packedNormal);
+#else
+    // Compiler will optimize the scale away
+    return UnpackNormalmapRGorAG(packedNormal, 1.0);
+#endif
+}
+
+// Unpack normal as DXT5nm (1, y, 0, x) or BC5 (x, y, 0, 1)
+real3 UnpackNormalmapRGorAG(real4 packedNormal, real scale = 1.0)
+{
+    // Convert to (?, y, 0, x)
+    packedNormal.a *= packedNormal.r;
+    return UnpackNormalAG(packedNormal, scale);
+}
+
+real3 UnpackNormalAG(real4 packedNormal, real scale = 1.0)
+{
+    real3 normal;
+    normal.xy = packedNormal.ag * 2.0 - 1.0;
+    normal.z = max(1.0e-16, sqrt(1.0 - saturate(dot(normal.xy, normal.xy))));
+    normal.xy *= scale;
+    return normal;
+}
 ```
 
 ## 28. Normal Map Shader - part 1
@@ -866,19 +953,34 @@ Z
   - 단점, 면들 사이의 갭들이 보임.
 - 매트릭스를 통한 vertex 확대.
 
-``` shader
+``` hlsl
 Zwrite Off
 Cull Front
 
-float4 Outline(float4 vertexPosition, float w)
+half4 Outline(half4 vertexPosition, half w)
 {
-    float4x4 m;
+    half4x4 m;
     m[0][0] = 1.0 + w; m[0][1] = 0.0;     m[0][2] = 0.0;     m[0][3] = 0.0;
     m[1][0] = 0.0;     m[1][1] = 1.0 + w; m[1][2] = 0.0;     m[1][3] = 0.0;
     m[2][0] = 0.0;     m[2][1] = 0.0;     m[2][2] = 1.0 + w; m[2][3] = 0.0;
     m[3][0] = 0.0;     m[3][1] = 0.0;     m[3][2] = 0.0;     m[3][3] = 1.0;
     return mul(m, vertexPosition);
 }
+```
+
+``` txt
+// 1. HLSL 방법.
+// ref: https://blog.naver.com/mnpshino/222058677191
+// UniversalRenderPipelineAsset_Renderer
+// - Add Feature> Render Objects
+//   - Add Pass Names (same as LightMode)
+
+// 2. ShaderGraph방법.
+// ref: https://walll4542.wixsite.com/watchthis/post/unityshader-14-urp-shader-graph
+// - Graph Inspector
+//   - Alpha Clip 체크
+//   - Two Sided 체크
+//   - Is Front Face> Branch> Fragment's Alpha로 알파적용.
 ```
 
 ## 32. Author_s Check-in

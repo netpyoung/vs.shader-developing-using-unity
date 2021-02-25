@@ -14,9 +14,9 @@ Shader "ShaderDevURP/00BareBone"
         }*/
         Tags
         {
-            "RenderType" = "Transparent"
+            "RenderType" = "Opaque"
             "RenderPipeline" = "UniversalPipeline"
-            "Queue" = "Transparent"
+            "Queue" = "Opaque"
             "IgnoreProjector" = "True"
         }
             
