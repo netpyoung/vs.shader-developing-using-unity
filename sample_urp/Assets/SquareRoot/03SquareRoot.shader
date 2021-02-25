@@ -1,4 +1,4 @@
-Shader "ShaderDevURP/Texture"
+Shader "ShaderDevURP/03SquareRoot"
 {
     Properties
     {
@@ -56,7 +56,11 @@ Shader "ShaderDevURP/Texture"
 
             half4 frag(Varyings IN) : SV_Target
             {
-                return SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv) * _Color;
+                half4 col = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv) * _Color;
+                // col.a = sqrt(IN.uv.x);
+                // col.a = saturate(sin(IN.uv.x * 20));
+                col.a = saturate(tan(IN.uv.x * 20));
+                return col;
             }
             ENDHLSL
         }

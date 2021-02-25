@@ -303,6 +303,8 @@ out.texcoord.xy = TRANSFORM_TEX(in.texcoord, _MainTex);
 ```
 
 ``` hlsl
+Blend SrcAlpha OneMinusSrcAlpha
+
 TEXTURE2D(_MainTex); SAMPLER(sampler_MainTex);
             
 CBUFFER_START(UnityPerMaterial)
