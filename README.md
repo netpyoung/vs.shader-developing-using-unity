@@ -476,10 +476,11 @@ sin / cos 함수와 _Time변수를 이용한 에니에미션.
 
 - 깃발의 vertex position을 sin으로 흔들고 중심점 위치 보정.
 
-``` shader
-float4 vertexFlagAnim(float4 p, float2 uv)
+``` hlsl
+half4 VertexFlagAnim(half4 p, half2 uv)
 {
-    p.z = p.z + sin((uv.x - (_Time.y * _Speed)) * _Frequency) * (uv.x *_Amplitude);
+    p.z += sin((uv.x - (_Time.y * _Speed)) * _Frequency)
+    p.z *= (uv.x *_Amplitude);
     return p;
 }
 ```
