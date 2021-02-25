@@ -1,12 +1,12 @@
-Shader "ShaderDevURP/09VertFlagAnim"
+Shader "ShaderDevURP/10VertAnimNormal"
 {
     Properties
     {
         _Color("Main Color", Color) = (1, 1, 1, 1)
         _MainTex("Main Texture", 2D) = "white" {}
-        _FlagFrequency("Flag Frequency", Float) = 1
-        _FlagAmplitude("Flag Amplitude", Float) = 1
-        _FlagSpeed("Flag Speed", Float) = 1
+        _Frequency("Frequency", Float) = 1
+        _Amplitude("Amplitude", Float) = 1
+        _Speed("Speed", Float) = 1
     }
 
     SubShader
@@ -35,14 +35,15 @@ Shader "ShaderDevURP/09VertFlagAnim"
                 float4 _MainTex_ST;
                 half4 _Color;
 
-                half _FlagFrequency;
-                half _FlagAmplitude;
-                half _FlagSpeed;
+                half _Frequency;
+                half _Amplitude;
+                half _Speed;
             CBUFFER_END
 
             struct Attributes
             {
                 float4 positionOS   : POSITION;
+                float4 normalOS     : NORMAL;
                 float2 uv           : TEXCOORD0;
             };
 
@@ -52,18 +53,16 @@ Shader "ShaderDevURP/09VertFlagAnim"
                 float2 uv           : TEXCOORD0;
             };
 
-            half3 VertexFlagAnim(half3 positionWS, half2 uv)
+            half3 VertexAnimNormal(half3 positionOS, half3 normalOS, half2 uv)
             {
-                positionWS.z += sin((uv.x - (_Time.y * _FlagSpeed)) * _FlagFrequency);
-                positionWS.z *= (uv.x * _FlagAmplitude);
-                return positionWS;
+                positionOS += sin((normalOS - (_Time.y * _Speed)) * _Frequency) * (normalOS * _Amplitude);
+                return positionOS;
             }
 
             Varyings vert(Attributes IN)
             {
                 Varyings OUT = (Varyings)0;
-
-                OUT.positionHCS = TransformObjectToHClip(VertexFlagAnim(IN.positionOS.xyz, IN.uv));
+                OUT.positionHCS = TransformObjectToHClip(VertexAnimNormal(IN.positionOS.xyz, IN.normalOS, IN.uv));
                 OUT.uv = TRANSFORM_TEX(IN.uv, _MainTex);
                 return OUT;
             }
