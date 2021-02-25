@@ -69,71 +69,92 @@ Fragment를 이용하여, 각 픽셀의 값(색)을 구한다.
 ## 03. Components of a Shader
 
 ``` shader
-Properties
+Shader "ShaderName"
+{
+  Properties
+  {
+  }
 
-Sub-Shader
-  hardware features(support graphics api(metal / gles / xbox360))
-  [#pragma onlyrenderer metal]
+  Sub-Shader
+  {
+    Tags
+    {
+    }
 
-  Pass
-     occlusion pass
-     lighting pass
-     beauty(diffuse, color) pass
+    Pass
+    {
+      hardware features(support graphics api(metal / gles / xbox360))
+      [#pragma onlyrenderer metal]
+      occlusion pass
+      lighting pass
+      beauty(diffuse, color) pass
 
-     Vertext-Shader-Input
-     Vertext-Shader-Output
+      Vertext-Shader-Input
+      Fragment-Shader-Input
 
-     Fragment-Shader-Input
-     Fragment-Shader-Output
+      Vertex-Shader
+      Fragment-Shader
+    }
+  }
+  Fallback
+}
 
-     Vertex-Shader
-     Fragment-Shader
-
-Fallback
 ```
 
 ## 04. Bare-bones shader
 
-``` shader
-Shader "ShaderName"
-{
-    CGINCLUDE
-    // 여러 SubShader에서 공통으로 쓰고 싶을때 넣는 곳.
-    ENDCG
+- <https://docs.unity3d.com/Packages/com.unity.render-pipelines.universal@10.3/manual/writing-shaders-urp-basic-unlit-structure.html>
 
-    SubShader
+``` hlsl
+Shader "ShaderDevURP/BareBone"
+{
+    Properties
     {
+        _Color("Main Color", Color) = (1, 1, 1, 1)
+    }
+
+        SubShader
+    {
+        Tags
+        {
+            "RenderType" = "Opaque"
+            "RenderPipeline" = "UniversalPipeline"
+        }
+
         Pass
         {
-            CGPROGRAM
+            HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
 
-            uniform half4 _Color;
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
-            struct vertextInput
+            CBUFFER_START(UnityPerMaterial)
+                half4 _Color;
+            CBUFFER_END
+
+            struct Attributes
             {
-                float4 vertext : POSITION;
+                float4 positionOS   : POSITION;
             };
 
-            struct vertextOutput
+            struct Varyings
             {
-                float4 pos : POSITION;
+                float4 positionHCS  : SV_POSITION;
             };
 
-            vertextOutput vert(vertextInput v)
+            Varyings vert(Attributes IN)
             {
-                vertextOutput o;
-                o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
-                return o;
-            };
+                Varyings OUT = (Varyings)0;
+                OUT.positionHCS = TransformObjectToHClip(IN.positionOS.xyz);
+                return OUT;
+            }
 
-            half4 frag(vertexOutput i) : COLOR
+            half4 frag() : SV_Target
             {
                 return _Color;
-            };
-
-            ENDCG
+            }
+            ENDHLSL
         }
     }
 }
@@ -192,14 +213,14 @@ Shader "ShaderName"
 | min  | default | max  |             |
 | ---- | ------- | ---- | ----------- |
 | 0    | 100     | 1499 | Background  |
-| 150  | 2000    | 2399 | Geometry    |
+| 1500 | 2000    | 2399 | Geometry    |
 | 2400 | 2450    | 2699 | AlphaTest   |
 | 2700 | 3000    | 3599 | Transparent |
 | 3600 | 4000    | 5000 | Overlay     |
 
 |      |                |       |
 | ---- | -------------- | ----- |
-| 0    | Rendered First | back  |
+| 0    | Rendered First | Back  |
 | 5000 | Rendered Last  | Front |
 
 ## 07. Sub Shader Tags
@@ -223,7 +244,7 @@ Shader "ShaderName"
 - [Camera.SetReplacementShader](https://docs.unity3d.com/ScriptReference/Camera.SetReplacementShader.html)
 - 일반적으로 RenderType는 Queue의 이름과 동일하게 설정
 
-    ``` shader
+    ``` hlsl
     "Queue" = "Transparent"
     "RenderType" = "Transparent"
     ```
@@ -253,7 +274,7 @@ Merged Pixel = blendOp((srcColor * srcFactor), (dstColor * dstFactor))
 
 ## 09. Texture Mapping
 
-``` shader
+``` hlsl
 // Texture 속성
 // Wrap Mode - Clamp / Repeat
 
@@ -267,8 +288,8 @@ uniform float4 _MainTex_ST;
 
 float4 texcoord : TEXCOORD0;
 
-texcoord.xy; // Tiling
-texcoord.zw; // Offset
+_MainTex_ST.xy; // Tiling
+_MainTex_ST.zw; // Offset
 
 float4 color = tex2D(_MainTex, texcoord);
 
@@ -279,6 +300,42 @@ float4 color = tex2D(_MainTex, texcoord);
 
 out.texcoord.xy = in.texcoord.xy * _MainTex_ST.xy + _MainTex_ST.zw;
 out.texcoord.xy = TRANSFORM_TEX(in.texcoord, _MainTex);
+```
+
+``` hlsl
+TEXTURE2D(_MainTex); SAMPLER(sampler_MainTex);
+            
+CBUFFER_START(UnityPerMaterial)
+    float4 _MainTex_ST;
+CBUFFER_END
+
+struct Attributes
+{
+    float4 uv           : TEXCOORD0;
+};
+
+struct Varyings
+{
+    float4 uv           : TEXCOORD0;
+};
+
+Varyings vert(Attributes IN)
+{
+    OUT.uv = TRANSFORM_TEX(IN.uv, _MainTex);
+}
+
+half4 frag() : SV_Target
+{
+    float4 tex = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv);
+}
+
+// com.unity.render-pipelines.core/ShaderLibrary/API/D3D11.hlsl
+#define TEXTURE2D(textureName)                Texture2D textureName
+#define SAMPLER(samplerName)                  SamplerState samplerName
+#define SAMPLE_TEXTURE2D(textureName, samplerName, coord2)                               textureName.Sample(samplerName, coord2)
+
+// com.unity.render-pipelines.core/ShaderLibrary/Macros.hlsl
+#define TRANSFORM_TEX(tex, name) ((tex.xy) * name##_ST.xy + name##_ST.zw)
 ```
 
 ## 10. Gradient Pattern
