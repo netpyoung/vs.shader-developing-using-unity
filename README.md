@@ -386,8 +386,8 @@ Quad, Plane의 UV맵핑이 다르다. Quad는 좌하단. Plane은 우하단
 
 ## 12. Line Pattern
 
-``` shader
-float drawLine(float2 uv, float start, float end)
+``` hlsl
+half DrawLine(half2 uv, half start, half end)
 {
     if (start < uv.x && uv.x < end)
     {
@@ -401,11 +401,14 @@ float drawLine(float2 uv, float start, float end)
 
 ## 14. Circle Pattern
 
-``` shader
-float drawCircle(float2 uv, float2 cp, float r)
+``` hlsl
+half DrawCircle(half2 uv, half2 cp, half r)
 {
-    float x2y2 = pow((uv.x - cp.x), 2) + pow((uv.y - cp.y), 2);
-    float r2 = pow(r, 2);
+    // cp : center position
+    // r  : radius
+
+    half x2y2 = pow((uv.x - cp.x), 2) + pow((uv.y - cp.y), 2);
+    half r2 = pow(r, 2);
     if (x2y2 > r2)
     {
         return 0;
@@ -419,17 +422,19 @@ float drawCircle(float2 uv, float2 cp, float r)
 - [smoonthstep](https://developer.download.nvidia.com/cg/smoothstep.html)
 - <https://thebookofshaders.com/glossary/?search=smoothstep>
 
-``` ref
-+----------+----------+----------+----------+
-1(from)    0.75       0.5(to)    0.25       0
-```
-
-``` shader
+``` hlsl
 float smoothstep(float a, float b, float x)
 {
     float t = saturate((x - a)/(b - a));
     return t * t * (3.0 - (2.0 * t));
 }
+```
+
+``` ref
+smoothstep(1, 0.5, uv.x);
+
++----------+----------+----------+----------+
+1(from)    0.75       0.5(to)    0.25       0
 ```
 
 | from | to  |            |        |
@@ -443,7 +448,7 @@ float smoothstep(float a, float b, float x)
 
 ## 16. Circle Fading Edges
 
-``` shader
+``` hlsl
 float drawCircleFade(float2 uv, float2 cp, float r, float feather)
 {
     float x2y2 = pow((uv.x - cp.x), 2) + pow((uv.y - cp.y), 2);
