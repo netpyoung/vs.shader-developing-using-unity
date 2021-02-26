@@ -23,7 +23,7 @@ Shader "ShaderDevURP/17Lighting_IBLReflection"
         [KeywordEnum(Off, Refl, Refr)]
         _IBLMode("IBL Mode", Float) = 1
         [NoScaleOffset]_CubeMap("Cube Map", Cube) = "" {}
-        _ReflectionFactor("Reflection %", Float) = 1
+        _ReflectionFactor("Reflection %", Range(0, 1)) = 1
         _ReflectionDetail("Reflection Detail", Range(1, 9)) = 1
         _ReflectionExposure("Reflection Exposure(HDR)", Float) = 1
     }
