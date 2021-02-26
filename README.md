@@ -1418,7 +1418,7 @@ w   : detail(max: 1)
 
 ## 53. Image Based Reflection - code 1
 
-``` shader
+``` hlsl
 float3 IBL_Reflection(
     samplerCUBE cubeMap,
     half        detail,
@@ -1428,6 +1428,19 @@ float3 IBL_Reflection(
 {
     float4 c = texCUBElod(cubeMap, float4(reflect, detail));
     return factor * c.rgb * (c.a * exeposure);
+}
+```
+
+``` hlsl
+// com.unity.render-pipelines.core/ShaderLibrary/API/D3D11.hlsl
+#define TEXTURECUBE_PARAM(textureName, samplerName)               TEXTURECUBE(textureName),       SAMPLER(samplerName)
+#define SAMPLE_TEXTURECUBE(textureName, samplerName, coord3)                             textureName.Sample(samplerName, coord3)
+#define SAMPLE_TEXTURECUBE_LOD(textureName, samplerName, coord3, lod)                    textureName.SampleLevel(samplerName, coord3, lod)
+
+half3 IBL_Reflection(TEXTURECUBE_PARAM(cubeMap, sampler_cubeMap), half detail, half3 worldRefl, half exposure, half reflectionFactor)
+{
+    half4 cubeMapCol = SAMPLE_TEXTURECUBE_LOD(cubeMap, sampler_cubeMap, worldRefl, detail).rgba;
+    return reflectionFactor * cubeMapCol.rgb * (cubeMapCol.a * exposure);
 }
 ```
 
