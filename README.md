@@ -1260,11 +1260,26 @@ float4 specularMap = tex2Dlod(_SpecularMap, o.texcoord);
 
 ## 45. Ambient Reflection - intro
 
+``` txt
+Windows> Ligiting> Environment> Environment Lighting> Source> Color
+Windows> Ligiting> Environment> Environment Lighting> Ambient Color> 지정.
+```
+
 주변(Ambient) 반사광.
 
 ``` ref
  A = ambient property of material * global ambient
    =                           KA * UNITY_LIGHTMODEL_AMBIENT
+```
+
+``` hlsl
+// ref: [Get Ambient Color in custom shader](https://forum.unity.com/threads/get-ambient-color-in-custom-shader.994786/)
+// half3 ambientColor = _AmbientFactor * UNITY_LIGHTMODEL_AMBIENT;
+half3 ambientColor = _AmbientFactor * half3(unity_SHAr.w, unity_SHAg.w, unity_SHAb.w);
+
+// ref: com.unity.render-pipelines.universal/ShaderLibrary/ShaderGraphFunctions.hlsl
+// #define SHADERGRAPH_AMBIENT_SKY unity_AmbientSky
+half3 ambientColor = _AmbientFactor * unity_AmbientSky;
 ```
 
 - <https://docs.unity3d.com/Manual/SL-UnityShaderVariables.html>
