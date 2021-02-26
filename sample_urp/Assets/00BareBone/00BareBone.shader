@@ -16,7 +16,6 @@ Shader "ShaderDevURP/00BareBone"
         {
             "RenderType" = "Opaque"
             "RenderPipeline" = "UniversalPipeline"
-            "Queue" = "Opaque"
             "IgnoreProjector" = "True"
         }
             
