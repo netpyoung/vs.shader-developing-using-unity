@@ -1464,7 +1464,7 @@ half3 IBL_Reflection(TEXTURECUBE_PARAM(cubeMap, sampler_cubeMap), half detail, h
 - Willebrord Snellius
 - [nvidia: refract](https://developer.download.nvidia.com/cg/refract.html)
 
-``` shader
+``` hlsl
 float3 refract(float3 i, float3 n, float eta)
 {
   float cosi = dot(-i, n);
@@ -1476,11 +1476,11 @@ float3 refract(float3 i, float3 n, float eta)
 
 ## 57. Image Based Refraction - code
 
-``` shader
-매질에 대한 반사
+``` hlsl
+// 매질에 대한 반사
 float3 world_reflect_V = reflect(-world_V, world_N);
 
-매질에 대한 굴절
+// 매질에 대한 굴절
 float3 world_refract_V = refract(-world_V, world_N, 1 / _RefractiveIndex);
 ```
 
@@ -1511,7 +1511,7 @@ Fresnel로 림라이트효과와 반사광효과를 흉내낼 수있다.
 
 - [wiki: Schlick's approximation](https://en.wikipedia.org/wiki/Schlick%27s_approximation)
 
-``` shader
+``` hlsl
 // H  is the standard half-angle vector.
 // F0 is reflectance at normal incidence (for skin use 0.028).
 float fresnelReflectance( float3 H, float3 V, float F0 )
@@ -1528,7 +1528,7 @@ float fresnelReflectance( float3 H, float3 V, float F0 )
 
 - [nvidia: lerp](https://developer.download.nvidia.com/cg/lerp.html)
 
-``` shader
+``` hlsl
 float fresnel = 1 - saturate(dot(world_V, world_N));
       fresnel = smoothstep(1 - _FresnelWidth, 1, fresnel);
 finalColor.rgb = lerp(finalColor.rgb, finalColor.rgb * reflColor, fresnel);
@@ -1587,14 +1587,15 @@ U = (x / w + 1) * 0.5
 V = (1 / w) * (y + w)  * 0.5
 ```
 
-
+``` ref
 _ProjectionParams.x : -1 TopLeft    D3D
                        1 BottomLeft Opengl
 
 UNITY_HALF_TEXEL_OFFSET
 -ScreenParams.zw
+```
 
-``` shader
+``` hlsl
 inline float4 ProjectionToTextureSpace(float4 pos)
 {
     float4 textureSpacePos = pos;
@@ -1610,13 +1611,16 @@ inline float4 ProjectionToTextureSpace(float4 pos)
 
 ## 63. Shadow Mapping - intro
 
+``` hlsl
+// Built-in(legacy)
 Tag {"LightMode" = "ShadowCaster"} => _ShadowMapTexture
+```
 
 ## 64. Shadow Mapping - code
 
 ## 65. Shadow Mapping - Glsl Compatible
 
-``` shader
+``` hlsl
 #pragma multi_compile_fwdbase
 
 #if _SHADOWMODE_ON
@@ -1687,7 +1691,6 @@ BRDF
 
 Microfacet Theory
 
-
 |            |      |                                    |
 | ---------- | ---- | ---------------------------------- |
 | Radiance   | 복사휘도 | 빛의 표면의 단위면적당 방출된 에너지(단위 시간당 특정 방향) |
@@ -1725,7 +1728,7 @@ $F = (reflect + (1 - reflect) \cdot (1 - (V . H))^5)$
 
 ## 70. BRDF - Anisotropy - code 2
 
-``` shader
+``` hlsl
 float AshikhminShirleyPremoze_BRDF(float nU, float nV, float3 tangentDir, float3 normalDir, float3 lightDir, float3 viewDir, float reflectionFactor)
 {
     float pi = 3.141592;
@@ -1754,6 +1757,6 @@ float3 specular = AshikhminShirleyPremoze_BRDF(_AnisoU, _AnisoV, tangentMap.xyz,
 
 ## 71. Profiling Shaders using Xcode
 
-Xcode 디버그
-=> 카메라버튼
-=> RenderCommandEncoder 더블클릭
+- Xcode 디버그
+  - 카메라버튼
+  - RenderCommandEncoder 더블클릭
