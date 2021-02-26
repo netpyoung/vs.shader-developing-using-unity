@@ -1006,15 +1006,15 @@ half4 Outline(half4 vertexPosition, half w)
 #endif
 ```
 
-- 여러 multi_compile 줄 결합
-  - 여러 multi_compile 줄이 제공될 수 있고, 결과 셰이더가 가능한 모든 줄 조합에 대해 컴파일됩니다.
+- 여러 multi_compile 결합
+  - 여러개의 multi_compile을 정의할 수 있고, 생성 가능한 모든 조합에 대해 컴파일됨.
 
     ``` shader
     #pragma multi_compile A B C
     #pragma multi_compile D E
     ```
 
-  - 첫 번째 줄에서 세 가지 배리언트가 생성되고, 두 번째 줄에서 두 가지 배리언트가 생성되어 총 여섯 가지의 셰이더 배리언트(A+D, B+D, C+D, A+E, B+E, C+E)가 생성됩니다
+  - 첫 번째 줄에서 세 가지 배리언트가 생성되고, 두 번째 줄에서 두 가지 배리언트가 생성되어, 총 여섯개(3 * 2)의 셰이더 배리언트(A+D, B+D, C+D, A+E, B+E, C+E)가 생성됨
 
 - Difference between shader_feature and multi_compile
 
@@ -1038,7 +1038,7 @@ half4 Outline(half4 vertexPosition, half w)
 
 ## 35. Multi Variant Shader - part 2
 
-``` shader
+``` hlsl
 float3 normalFromColor (float4 colorVal)
 {
     #if defined(UNITY_NO_DXT5nm)

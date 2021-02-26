@@ -1,4 +1,4 @@
-Shader "ShaderDevURP/01Texture"
+Shader "ShaderDevURP/11NormalMap"
 {
     Properties
     {
