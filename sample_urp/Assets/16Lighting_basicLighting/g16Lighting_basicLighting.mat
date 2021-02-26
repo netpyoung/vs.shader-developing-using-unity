@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: g14Lighting_specular
-  m_Shader: {fileID: -6465566751694194690, guid: 17f3f8697cce0354dbc18a2c5194ad58, type: 3}
+  m_Name: g16Lighting_basicLighting
+  m_Shader: {fileID: -6465566751694194690, guid: 4eb5915bfce969041b604327529bc257, type: 3}
   m_ShaderKeywords: ENUM_E0937EA883284E809B05A2983D2350C1_FRAG ENUM_F489282733DB4F408FB03541DC0157FD_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -24,7 +24,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - Texture2D_828c0363b35747e08e798eca8809a84e:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 644cfe1aee970264184f34774477ddcb, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - Texture2D_8d5f9b4f21bb4f849fbd0205ad0ef81a:
@@ -84,10 +84,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
+    - BOOLEAN_4E1B169DC7604BB5ABADBD3A95501E1A: 0
     - ENUM_E0937EA883284E809B05A2983D2350C1: 1
     - ENUM_F489282733DB4F408FB03541DC0157FD: 0
-    - Vector1_8a4116950b5e48628004739b9aa23f87: 1
-    - Vector1_8d79368ba88f4e81b609dec8e497babb: 1
+    - Vector1_8a4116950b5e48628004739b9aa23f87: 0.2
+    - Vector1_8d79368ba88f4e81b609dec8e497babb: 22
     - Vector1_cf03ea52abf445689c495eea65b23d86: 1
     - _BumpScale: 1
     - _Cutoff: 0.5

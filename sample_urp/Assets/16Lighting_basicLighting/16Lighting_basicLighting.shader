@@ -1,4 +1,4 @@
-Shader "ShaderDevURP/15Lighting_ambient"
+Shader "ShaderDevURP/16Lighting_basicLighting"
 {
     Properties
     {
@@ -131,10 +131,11 @@ Shader "ShaderDevURP/15Lighting_ambient"
                 half3 L = light.direction;
                 half3 V = normalize(GetWorldSpaceViewDir(OUT.positionWS));
 
+                half3 mainTexColor = SAMPLE_TEXTURE2D_LOD(_MainTex, sampler_MainTex, OUT.uv, 0).rgb;
                 half3 specularColor = SAMPLE_TEXTURE2D_LOD(_SpecularMap, sampler_SpecularMap, OUT.uv, 0).rgb;
                 half3 diffuse = DiffuseLambert(N, L, light.color, _DiffusePercent, attenuation);
                 half3 specular = SpecularBlinnPhong(N, L, V, specularColor, _SpecularPercent, attenuation, _SpecularPower);
-                OUT.surfaceColor = half4(diffuse + specular, 1);
+                OUT.surfaceColor = half4(mainTexColor * _Color * diffuse + specular, 1);
     #if _AMBIENTMODE_ON
                 half3 ambientColor = _AmbientFactor * unity_AmbientSky;
                 OUT.surfaceColor.xyz += ambientColor;
@@ -164,11 +165,12 @@ Shader "ShaderDevURP/15Lighting_ambient"
                 
                 half3 V = normalize(GetWorldSpaceViewDir(IN.positionWS));
 
+                half3 mainTexColor = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv).rgb;
                 half3 diffuse = DiffuseLambert(N, L, light.color, _DiffusePercent, attenuation);
                 half3 specularColor = SAMPLE_TEXTURE2D(_SpecularMap, sampler_SpecularMap, IN.uv).rgb;
                 half3 specular = SpecularBlinnPhong(N, L, V, specularColor, _SpecularPercent, attenuation, _SpecularPower);
 
-                half4 finalColor = half4(diffuse + specular, 1);
+                half4 finalColor = half4(mainTexColor * _Color * diffuse + specular, 1);
     #if _AMBIENTMODE_ON
                 // half3 ambientColor = _AmbientFactor * UNITY_LIGHTMODEL_AMBIENT;
                 half3 ambientColor = _AmbientFactor * unity_AmbientSky;

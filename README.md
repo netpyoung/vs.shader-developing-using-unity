@@ -1241,7 +1241,7 @@ Blinn-Phong Reflection Model : max(0, dot(H, N))^S
   - <https://docs.unity3d.com/Manual/SL-PlatformDifferences.html>
   - <https://docs.unity3d.com/Manual/SL-ShaderCompileTargets.html>
 
-``` cg
+``` hlsl
 // tex2D - pixel shader only
 // float4 specularMap = tex2D(_SpecularMap, o.texcoord.xy);
 
@@ -1252,6 +1252,10 @@ Blinn-Phong Reflection Model : max(0, dot(H, N))^S
 
 #pragma target 3.0
 float4 specularMap = tex2Dlod(_SpecularMap, o.texcoord);
+
+#define SAMPLE_TEXTURE2D_LOD(textureName, samplerName, coord2, lod)                      textureName.SampleLevel(samplerName, coord2, lod)
+half specularColor = SAMPLE_TEXTURE2D_LOD(_SpecularMap, sampler_SpecularMap, OUT.uv, 0).r;
+
 ```
 
 - pragma

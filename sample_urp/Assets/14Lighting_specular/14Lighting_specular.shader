@@ -122,8 +122,7 @@ Shader "ShaderDevURP/14Lighting_specular"
                 half3 L = light.direction;
                 half3 V = normalize(GetWorldSpaceViewDir(OUT.positionWS));
 
-                //half specularColor = SAMPLE_TEXTURE2D(_SpecularMap, sampler_SpecularMap, OUT.uv).r;
-                half specularColor = tex2Dlod(sampler_SpecularMap, IN.uv).r;
+                half3 specularColor = SAMPLE_TEXTURE2D_LOD(_SpecularMap, sampler_SpecularMap, OUT.uv, 0).rgb;
                 half3 diffuse = DiffuseLambert(N, L, light.color, _DiffusePercent, attenuation);
                 half3 specular = SpecularBlinnPhong(N, L, V, specularColor, _SpecularPercent, attenuation, _SpecularPower);
                 OUT.surfaceColor = half4(diffuse + specular, 1);
@@ -153,7 +152,7 @@ Shader "ShaderDevURP/14Lighting_specular"
                 half3 V = normalize(GetWorldSpaceViewDir(IN.positionWS));
 
                 half3 diffuse = DiffuseLambert(N, L, light.color, _DiffusePercent, attenuation);
-                half specularColor = SAMPLE_TEXTURE2D(_SpecularMap, sampler_SpecularMap, IN.uv).r;
+                half3 specularColor = SAMPLE_TEXTURE2D(_SpecularMap, sampler_SpecularMap, IN.uv).rgb;
                 half3 specular = SpecularBlinnPhong(N, L, V, specularColor, _SpecularPercent, attenuation, _SpecularPower);
 
                 return half4(diffuse + specular, 1);
