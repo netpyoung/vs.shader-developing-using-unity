@@ -160,7 +160,7 @@
     "m_SourceType": 1,
     "m_FunctionName": "ApplyShadow",
     "m_FunctionSource": "",
-    "m_FunctionBody": "#ifdef SHADERGRAPH_PREVIEW\n    OutColor = InColor;\n#else\n    half4 shadowCoord = TransformWorldToShadowCoord(PositionWS);\n    ShadowSamplingData shadowSamplingData = GetMainLightShadowSamplingData();\n    half4 shadowParams = GetMainLightShadowParams();\n    half shadowAttenuation = SampleShadowmap(TEXTURE2D_ARGS(_MainLightShadowmapTexture, sampler_MainLightShadowmapTexture), shadowCoord, shadowSamplingData, shadowParams, false);\n    OutColor = InColor * shadowAttenuation;\n#endif"
+    "m_FunctionBody": "#ifdef SHADERGRAPH_PREVIEW\n    OutColor = InColor;\n#else\n    half4 shadowCoord = TransformWorldToShadowCoord(PositionWS);\n    ShadowSamplingData shadowSamplingData = GetMainLightShadowSamplingData();\n    half4 shadowParams = GetMainLightShadowParams();\n    half shadowAttenuation = SampleShadowmap(TEXTURE2D_ARGS(_MainLightShadowmapTexture, sampler_MainLightShadowmapTexture), shadowCoord, shadowSamplingData, shadowParams, false);\n//    half shadowAttenuation = MainLightRealtimeShadow(shadowCoord);\n    OutColor = InColor * shadowAttenuation;\n#endif"
 }
 
 {
@@ -207,10 +207,10 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -50.666656494140628,
-            "y": -92.0,
+            "x": -50.40000915527344,
+            "y": -91.99999237060547,
             "width": 140.0,
-            "height": 34.0
+            "height": 34.400001525878909
         }
     },
     "m_Slots": [
@@ -310,10 +310,10 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -50.666656494140628,
-            "y": -126.0,
-            "width": 108.0,
-            "height": 34.000003814697269
+            "x": -50.40000915527344,
+            "y": -125.5999984741211,
+            "width": 107.20000457763672,
+            "height": 34.400001525878909
         }
     },
     "m_Slots": [

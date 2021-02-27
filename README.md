@@ -1814,7 +1814,6 @@ Pass
 }
 ```
 
-
 ## 65. Shadow Mapping - Glsl Compatible
 
 ``` hlsl
@@ -1908,7 +1907,8 @@ $\varphi$: yx평면으로 투영된 벡터로부터 +x축으로의 각도
 ## 68. BRDF - Anisotropy - intro
 
 - Ashikhimin-Shirley && Ashikhimin-Premoze
-  - Ashikhimin-Shirley제안 Ashikhimin-Premoze에 의해 수정
+  - Ashikhimin-Shirley 제안
+  - Ashikhimin-Premoze에 의해 수정
 
 ``` ref
 H = Halfway
@@ -1918,9 +1918,13 @@ B = Bitangent
 
 ${\sqrt{(n_u+1) + (n_v+1)} (N \cdotp H)^{ N_u(H \cdot T) + n_v(H \cdot B)^2 \over 1 -(N \cdot H)^2} \over 8_\pi \cdot (V \cdotp H) \cdot max((N \cdotp L), (N \cdotp V)) } \cdot FrennelTerm$
 
-$F = (reflect + (1 - reflect) \cdot (1 - (V . H))^5)$
+$F = (reflectionFactor + (1 - reflectionFactor) \cdot (1 - (V . H))^5)$
 
 ![Ashikhimin_shirley_premoze](res/Ashikhimin_shirley_premoze.jpg)
+
+``` hlsl
+half AshikhminShirleyPremoze_BRDF(half nU, half nV, half reflectionFactor, half3 N, half3 T,  half3 L, half3 V);
+```
 
 ## 69. BRDF - Anisotropy - code 1
 
