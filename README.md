@@ -1486,6 +1486,29 @@ float3 world_refract_V = refract(-world_V, world_N, 1 / _RefractiveIndex);
 
 ## 58. Image Based Fresnel - intro
 
+``` hlsl
+half3 V = normalize(GetWorldSpaceViewDir(IN.positionWS));
+
+// dot(V, N)는 각도가 좁을수록 1로 수렴하니,
+// 각도가 커지면 더 밝도록 One Minus.
+half fresnelWeight = 1 - saturate(dot(V, N));
+
+// 거리에 따른 비율 보간.
+half fresnel = smoothstep(1 - _FresnelWidth, 1, fresnelWeight);
+
+half3 reflectVN = reflect(-V, N);
+half3 reflectColor = IBL_Reflection(_CubeMap, sampler_CubeMap, _ReflectionDetail, reflectVN, _ReflectionExposure, _ReflectionFactor);
+
+// fresnel로 보간효과
+finalColor.rgb = lerp(finalColor.rgb, finalColor.rgb * reflectColor, fresnel);
+```
+
+![lerp](res/lerp.jpg)
+
+- [nvidia: lerp](https://developer.download.nvidia.com/cg/lerp.html)
+
+### Blinn-phong 예
+
 ![fres-01.png](res/fres-01.png)
 
 ![fres-02.png](res/fres-02.png)
@@ -1523,16 +1546,6 @@ float fresnelReflectance( float3 H, float3 V, float F0 )
 ```
 
 ## 59. Image Based Fresnel - code 1
-
-![lerp](res/lerp.jpg)
-
-- [nvidia: lerp](https://developer.download.nvidia.com/cg/lerp.html)
-
-``` hlsl
-float fresnel = 1 - saturate(dot(world_V, world_N));
-      fresnel = smoothstep(1 - _FresnelWidth, 1, fresnel);
-finalColor.rgb = lerp(finalColor.rgb, finalColor.rgb * reflColor, fresnel);
-```
 
 ## 60. Image Based Fresnel - code 2
 
@@ -1591,8 +1604,7 @@ V = (1 / w) * (y + w)  * 0.5
 _ProjectionParams.x : -1 TopLeft    D3D
                        1 BottomLeft Opengl
 
-UNITY_HALF_TEXEL_OFFSET
--ScreenParams.zw
+UNITY_HALF_TEXEL_OFFSET인 경우 _ScreenParams.zw를 곱해준다.
 ```
 
 ``` hlsl
@@ -1607,20 +1619,84 @@ inline float4 ProjectionToTextureSpace(float4 pos)
     textureSpacePos.xy = float2 (textureSpacePos.x/textureSpacePos.w, textureSpacePos.y/textureSpacePos.w) * 0.5f;
     return textureSpacePos;
 }
+
+// https://github.com/Unity-Technologies/Graphics/pull/2529
+// com.unity.render-pipelines.universal/ShaderLibrary/ShaderVariablesFunctions.deprecated.hlsl
+
+// Deprecated: A confusingly named and duplicate function that scales clipspace to unity NDC range. (-w < x(-y) < w --> 0 < xy < w)
+// Use GetVertexPositionInputs().positionNDC instead for vertex shader
+// Or a similar function in Common.hlsl, ComputeNormalizedDeviceCoordinatesWithZ()
+float4 ComputeScreenPos(float4 positionCS)
+{
+    float4 o = positionCS * 0.5f;
+    o.xy = float2(o.x, o.y * _ProjectionParams.x) + o.w;
+    o.zw = positionCS.zw;
+    return o;
+}
 ```
 
 ## 63. Shadow Mapping - intro
+
+1. Z-depth구하기
+   1. 씬 렌더링
+   2. Z-depth를 깊이버퍼에 저장한다(depth map)
+
+      ``` txt
+      world > View[Light] > Proj[Light]
+            Light's View Matrix > Light's Projection Matrix
+      > transform NDC
+      > transform texture Space
+      ```
+
+2. 그림자그리기
+   1. 씬 렌더링
+   2. 깊이버퍼랑 Z-depth 테스트
+
+      ``` txt
+      if (fragment Z-depth > sampled Z-depth)
+      {
+          shadow : 0
+      }
+      else
+      {
+          lit     : 1
+      }
+      ```
 
 ``` hlsl
 // Built-in(legacy)
 Tag {"LightMode" = "ShadowCaster"} => _ShadowMapTexture
 ```
 
+TODO 따로 정리한 페이지로 링크.
+
+``` txt
+- Mesh Renderer> Lighting> Cast Shadow> On
+- ShadowCaster Pass
+- frag 함수에서 shadow(0) / lit(1) 반환
+
+world > View[Camera] > Proj[Camera]
+            Camera's View Matrix > Camera's Projection Matrix
+      > transform texture Space
+```
+
 ## 64. Shadow Mapping - code
+
+- Builtin(Legacy)에서는 `_ShadowMapTexture`를 활용하나, URP에서는 API도 바뀌고 내부적으로 `_MainLightShadowmapTexture`를 활용하도록 바뀌었다.
+- com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl
+
+``` hlsl
+half4 shadowCoord = TransformWorldToShadowCoord(IN.positionWS);
+ShadowSamplingData shadowSamplingData = GetMainLightShadowSamplingData();
+half4 shadowParams = GetMainLightShadowParams();
+half shadowAttenuation = SampleShadowmap(TEXTURE2D_ARGS(_MainLightShadowmapTexture, sampler_MainLightShadowmapTexture), shadowCoord, shadowSamplingData, shadowParams, false);
+finalColor.rgb *= shadowAttenuation;
+```
 
 ## 65. Shadow Mapping - Glsl Compatible
 
 ``` hlsl
+// Legacy
 #pragma multi_compile_fwdbase
 
 #if _SHADOWMODE_ON
