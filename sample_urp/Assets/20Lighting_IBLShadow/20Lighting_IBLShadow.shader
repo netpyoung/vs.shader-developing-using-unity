@@ -159,19 +159,6 @@ Shader "ShaderDevURP/20Lighting_IBLShadow"
                 return reflectionFactor * cubemapColor.rgb * (cubemapColor.a * exposure);
             }
 
-            inline float4 ProjectionToTextureSpace(float4 positionHCS)
-            {
-            	float4 textureSpacePos = positionHCS;
-            	#if defined(UNITY_HALF_TEXEL_OFFSET)
-            		textureSpacePos.xy = float2 (textureSpacePos.x, textureSpacePos.y * _ProjectionParams.x) + textureSpacePos.w * _ScreenParams.zw;
-            	#else
-            		textureSpacePos.xy = float2 (textureSpacePos.x, textureSpacePos.y * _ProjectionParams.x) + textureSpacePos.w;
-            	#endif
-            	textureSpacePos.xy = float2 (textureSpacePos.x/textureSpacePos.w, textureSpacePos.y/textureSpacePos.w) * 0.5f;
-            	return textureSpacePos;
-            
-            }
-
             Varyings vert(Attributes IN)
             {
                 Varyings OUT = (Varyings)0;
@@ -220,10 +207,7 @@ Shader "ShaderDevURP/20Lighting_IBLShadow"
 #endif // _IBLMODE_
 
 #if _SHADOWMODE_ON
-                //OUT.shadowCoord = ProjectionToTextureSpace(OUT.positionHCS);
-                //VertexPositionInputs vertexInput = GetVertexPositionInputs(IN.positionOS.xyz);
-                //OUT.shadowCoord = GetShadowCoord(vertexInput);
-                //OUT.shadowCoord = TransformWorldToShadowCoord(OUT.positionWS);
+                OUT.shadowCoord = TransformWorldToShadowCoord(OUT.positionWS);
 #endif // _SHADOWMODE_ON
                 return OUT;
             }
@@ -241,11 +225,7 @@ Shader "ShaderDevURP/20Lighting_IBLShadow"
 #if _LIGHTING_VERT
                 half3 finalColor = IN.surfaceColor.rgb;
     #if _SHADOWMODE_ON
-                // finalColor.rgb *= MainLightRealtimeShadow(IN.shadowCoord);
-                //Light mainLight = GetMainLight(IN.shadowCoord);
-                //finalColor.rgb *= mainLight.shadowAttenuation;
-                half4 shadowCoord = TransformWorldToShadowCoord(IN.positionWS);
-                finalColor.rgb *= MainLightRealtimeShadow(shadowCoord);
+                finalColor.rgb *= MainLightRealtimeShadow(IN.shadowCoord);
     #endif // _SHADOWMODE_ON
                 return half4(finalColor, 1);
 #elif _LIGHTING_FRAG
@@ -283,14 +263,7 @@ Shader "ShaderDevURP/20Lighting_IBLShadow"
     #endif // _IBLMODE_
 
     #if _SHADOWMODE_ON
-                half4 shadowCoord = TransformWorldToShadowCoord(IN.positionWS);
-                ShadowSamplingData shadowSamplingData = GetMainLightShadowSamplingData();
-                half4 shadowParams = GetMainLightShadowParams();
-                half shadowAttenuation = SampleShadowmap(TEXTURE2D_ARGS(_MainLightShadowmapTexture, sampler_MainLightShadowmapTexture), shadowCoord, shadowSamplingData, shadowParams, false);
-                finalColor.rgb *= shadowAttenuation;
-                //finalColor.rgb *= MainLightRealtimeShadow(IN.shadowCoord);
-                // Light mainLight = GetMainLight(i.shadowCoord);
-                // finalColor.rgb *= mainLight.shadowAttenuation;
+                finalColor.rgb *= MainLightRealtimeShadow(IN.shadowCoord);
     #endif // _SHADOWMODE_ON
                 return finalColor;
 #else
@@ -316,8 +289,6 @@ Shader "ShaderDevURP/20Lighting_IBLShadow"
                 half3 finalColor = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv).rgb;
         #if _SHADOWMODE_ON
                 finalColor.rgb *= MainLightRealtimeShadow(IN.shadowCoord);
-                //Light mainLight = GetMainLight(IN.shadowCoord);
-                //finalColor.rgb *= mainLight.shadowAttenuation;
         #endif // _SHADOWMODE_ON
                 return half4(finalColor, 1);
     #endif // _IBLMODE_

@@ -1682,6 +1682,59 @@ world > View[Camera] > Proj[Camera]
 
 ## 64. Shadow Mapping - code
 
+``` hlsl
+// builtin(legacy)
+inline float4 ProjectionToTextureSpace(float4 positionHCS)
+{
+  float4 textureSpacePos = positionHCS;
+  #if defined(UNITY_HALF_TEXEL_OFFSET)
+    textureSpacePos.xy = float2 (textureSpacePos.x, textureSpacePos.y * _ProjectionParams.x) + textureSpacePos.w * _ScreenParams.zw;
+  #else
+    textureSpacePos.xy = float2 (textureSpacePos.x, textureSpacePos.y * _ProjectionParams.x) + textureSpacePos.w;
+  #endif
+  textureSpacePos.xy = float2 (textureSpacePos.x/textureSpacePos.w, textureSpacePos.y/textureSpacePos.w) * 0.5f;
+  return textureSpacePos;
+}
+
+half4 shadowCoord = ProjectionToTextureSpace(positionHCS)
+half shadowAttenuation = tex2D(_ShadowMapTexture, shadowCoord).a;
+
+Pass
+{
+  Name "ShadowCaster"
+  Tags { "Queue" = "Opaque" "LightMode" = "ShadowCaster" }
+  ZWrite On
+  Cull Off
+
+  CGPROGRAM
+  #pragma vertex vert
+  #pragma fragment frag
+  
+  struct vertexInput
+  {
+    float4 vertex : POSITION;
+  };
+  struct vertexOutput
+  {
+    float4 pos : SV_POSITION;
+  };
+  
+  vertexOutput vert (vertexInput v)
+  {
+    vertexOutput o;
+    o.pos = UnityObjectToClipPos(v.vertex);
+    return o;
+  }
+  
+  float4 frag(vertexOutput i) : SV_Target
+  {
+    return 0;
+  }
+  ENDCG
+
+}
+```
+
 - Builtin(Legacy)에서는 `_ShadowMapTexture`를 활용하나, URP에서는 API도 바뀌고 내부적으로 `_MainLightShadowmapTexture`를 활용하도록 바뀌었다.
 - com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl
 
@@ -1692,6 +1745,75 @@ half4 shadowParams = GetMainLightShadowParams();
 half shadowAttenuation = SampleShadowmap(TEXTURE2D_ARGS(_MainLightShadowmapTexture, sampler_MainLightShadowmapTexture), shadowCoord, shadowSamplingData, shadowParams, false);
 finalColor.rgb *= shadowAttenuation;
 ```
+
+``` hlsl
+// URP
+half4 shadowCoord = TransformWorldToShadowCoord(positionWS);
+// or
+// VertexPositionInputs vertexInput = GetVertexPositionInputs(IN.positionOS.xyz);
+// half4 shadowCoord = GetShadowCoord(vertexInput);
+
+half shadowAttenuation = MainLightRealtimeShadow(shadowCoord);
+// or
+// ShadowSamplingData shadowSamplingData = GetMainLightShadowSamplingData();
+// half4 shadowParams = GetMainLightShadowParams();
+// half shadowAttenuation = SampleShadowmap(TEXTURE2D_ARGS(_MainLightShadowmapTexture, sampler_MainLightShadowmapTexture), shadowCoord, shadowSamplingData, shadowParams, false);
+// or
+// Light mainLight = GetMainLight(i.shadowCoord);
+// half shadowAttenuation = mainLight.shadowAttenuation;
+
+Pass
+{
+    Name "ShadowCaster"
+    Tags
+    {
+        "LightMode" = "ShadowCaster"
+    }
+
+    ZWrite On
+    Cull Back
+
+    HLSLPROGRAM
+    #pragma target 3.5
+
+    #pragma vertex shadowVert
+    #pragma fragment shadowFrag
+
+    #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"  // real
+    #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/CommonMaterial.hlsl" // LerpWhiteTo
+    #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+    #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl" // ApplyShadowBias
+
+    struct Attributes
+    {
+        float4 positionOS   : POSITION;
+        float4 normal       : NORMAL;
+    };
+
+    struct Varyings
+    {
+        float4 positionHCS  : SV_POSITION;
+    };
+
+    Varyings shadowVert(Attributes IN)
+    {
+        Varyings OUT = (Varyings)0;
+
+        float3 positionWS = TransformObjectToWorld(IN.positionOS.xyz);
+        float3 normalWS = TransformObjectToWorldNormal(IN.normal.xyz);
+        OUT.positionHCS = TransformWorldToHClip(ApplyShadowBias(positionWS, normalWS, _MainLightPosition.xyz));
+
+        return OUT;
+    }
+
+    half4 shadowFrag(Varyings IN) : SV_Target
+    {
+        return 0;
+    }
+    ENDHLSL
+}
+```
+
 
 ## 65. Shadow Mapping - Glsl Compatible
 
