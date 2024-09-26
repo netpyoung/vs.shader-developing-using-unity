@@ -18,10 +18,10 @@ Study log on Chayan Vinayak Goswami's ShaderDev
 - https://kblog.popekim.com/2011/11/01-part-1.html
 ```
 
-|     | 코어갯수 | 연산                 |
-| --- | ---- | ------------------ |
-| CPU | 몇개   | serial operation   |
-| GPU | 수천개  | parallel operation |
+|     | 코어갯수 | 연산               |
+| --- | -------- | ------------------ |
+| CPU | 몇개     | serial operation   |
+| GPU | 수천개   | parallel operation |
 
 ``` ref
 강력한 마이크로 프로세서를 몇개 또는 큰 파이프를 쓰는 대신,
@@ -30,13 +30,13 @@ Study log on Chayan Vinayak Goswami's ShaderDev
 - https://thebookofshaders.com/01/?lan=kr
 ```
 
-| 쉐이더                 | 기능                                |
-| ------------------- | --------------------------------- |
-| Vertex              |                                   |
-| Geometry            | input primitive                   |
-| Fragment / Pixel    |                                   |
+| 쉐이더              | 기능                                                   |
+| ------------------- | ------------------------------------------------------ |
+| Vertex              |                                                        |
+| Geometry            | input primitive                                        |
+| Fragment / Pixel    |                                                        |
 | Compute             | 렌더링 파이프라인에 속해 있지 않음. GPU 병렬 처리 목적 |
-| Tessellation / Hull | OpenGL 4, DirectX3D 11, Metal     |
+| Tessellation / Hull | OpenGL 4, DirectX3D 11, Metal                          |
 
 ## 02. Working of a Shader
 
@@ -168,10 +168,10 @@ Shader "ShaderDevURP/BareBone"
 
 ![coordinate_systems](res/coordinate_systems.png)
 
-|                   |      |                          |
-| ----------------- | ---- | ------------------------ |
-| Coordinate System | 좌표계  | 좌표를 이용하여, 특정 요소의 위치를 정의. |
-| Coordinate Space  | 좌표공간 | 한점의 위치가 다른 점과의 관계로 규정.   |
+|                   |          |                                           |
+| ----------------- | -------- | ----------------------------------------- |
+| Coordinate System | 좌표계   | 좌표를 이용하여, 특정 요소의 위치를 정의. |
+| Coordinate Space  | 좌표공간 | 한점의 위치가 다른 점과의 관계로 규정.    |
 
 - Vector4 이유
 
@@ -546,11 +546,11 @@ ZTest
 - <https://docs.unity3d.com/Manual/SL-CullAndDepth.html>
 - [5강 알파와알파소팅](https://www.slideshare.net/jpcorp/5-10351002)
 
-|        |                                       |                                                                                                    |
-| ------ | ------------------------------------- | -------------------------------------------------------------------------------------------------- |
+|        |                                       |                                                                                                                                            |
+| ------ | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | ZWrite | [On]/Off                              | Z-Buffer 값을 작성할지 안할지. Off시 Z-Buffer 변경안함. On시 ZTest통과시 Z-Buffer값을 현재 ZTest값으로 설정(불투명 오브젝트에서 많이 쓰임) |
-| Cull   | [Back] / Front / Off                  | 해당 면을 렌더링 하지 않음                                                                                    |
-| ZTest  | [(<=)LEqual]/Less/NotEqual/Always ... | if ( Z-Buffer `xop` Z-Depth ) { Zwrite }                                                           |
+| Cull   | [Back] / Front / Off                  | 해당 면을 렌더링 하지 않음                                                                                                                 |
+| ZTest  | [(<=)LEqual]/Less/NotEqual/Always ... | if ( Z-Buffer `xop` Z-Depth ) { Zwrite }                                                                                                   |
 
 ![z_buffer_and_color_buffer.jpg](res/z_buffer_and_color_buffer.jpg)
 
@@ -1081,12 +1081,12 @@ float3 WorldNormalFromNormalMap(sampler2D normalMap, float2 normalTexCoord, floa
 
 - `B`asic Lighting Model
 
-|            |      |                        |
-| ---------- | ---- | ---------------------- |
-| `A`mbient  | 주변광  | 전체적                    |
-| `D`iffuse  | 난반사광 | 특정방향 입사, 고르게 반사        |
+|            |          |                                         |
+| ---------- | -------- | --------------------------------------- |
+| `A`mbient  | 주변광   | 전체적                                  |
+| `D`iffuse  | 난반사광 | 특정방향 입사, 고르게 반사              |
 | `S`pecular | 전반사광 | 특정방향 입사, 특정방향으로 정확히 반사 |
-| `E`misive  | 발산   | 발광체                    |
+| `E`misive  | 발산     | 발광체                                  |
 
 ### Fowrad Rendering
 
@@ -1888,10 +1888,10 @@ BRDF
 
 Microfacet Theory
 
-|            |      |                                    |
-| ---------- | ---- | ---------------------------------- |
+|            |          |                                                             |
+| ---------- | -------- | ----------------------------------------------------------- |
 | Radiance   | 복사휘도 | 빛의 표면의 단위면적당 방출된 에너지(단위 시간당 특정 방향) |
-| Irradiance | 복사조도 | 받은 에너지(단위 면적)                      |
+| Irradiance | 복사조도 | 받은 에너지(단위 면적)                                      |
 
 ## 67. BRDF - Spherical Coordinate System
 
